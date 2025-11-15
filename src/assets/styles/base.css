@@ -1,0 +1,18 @@
+:root {
+    --cafe: #6f4827;
+    --cafe-claro: #d09b69;
+    --naranja-opaco: #b27139;
+    --gris-oscuro: #3d3936;
+    --gris-claro: #5c5754;
+    --crema: #FAF2EB;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+}

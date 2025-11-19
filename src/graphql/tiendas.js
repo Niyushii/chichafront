@@ -137,3 +137,4 @@ export const ELIMINAR_CODIGO_QR = gql`
     }
   }
 `
+

@@ -14,8 +14,7 @@ const authLink = setContext((_, { headers }) => {
 })
 
 const uploadLink = createUploadLink({
-    uri: 'http://127.0.0.1:8000/chichapi/',
-    headers: {}
+    uri: 'http://127.0.0.1:8000/chichapi/'
 })
 
 const client = new ApolloClient({

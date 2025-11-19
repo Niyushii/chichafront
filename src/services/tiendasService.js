@@ -74,7 +74,7 @@ export const tiendasService = {
     }
   },
 
-  async crear(tiendaData, fotoPerfil = null, codigoQr = null) {
+  async crear(tiendaData, fotoPerfil, codigoQr) {
     try {
       const variables = {
         input: {
@@ -85,12 +85,11 @@ export const tiendasService = {
         }
       }
 
-      // Agregar archivos si existen
-      if (fotoPerfil) {
+      if (fotoPerfil instanceof File) {
         variables.fotoPerfil = fotoPerfil
       }
 
-      if (codigoQr) {
+      if (codigoQr instanceof File) {
         variables.codigoQr = codigoQr
       }
 
@@ -112,52 +111,48 @@ export const tiendasService = {
     }
   },
 
-    async editar(id, tiendaData, fotoPerfil = null, codigoQr = null) {
+
+
+
+  async editar(id, tiendaData, fotoPerfil, codigoQr) {
     try {
-        const variables = {
+      const variables = {
         id,
         input: {}
-        }
+      }
 
-        // Solo agregar campos que tengan valor
-        if (tiendaData.nombre) variables.input.nombre = tiendaData.nombre
-        if (tiendaData.descripcion !== undefined) variables.input.descripcion = tiendaData.descripcion
-        if (tiendaData.telefono !== undefined) variables.input.telefono = tiendaData.telefono
-        if (tiendaData.direccion !== undefined) variables.input.direccion = tiendaData.direccion
+      if (tiendaData.nombre) variables.input.nombre = tiendaData.nombre
+      if (tiendaData.descripcion !== undefined) variables.input.descripcion = tiendaData.descripcion
+      if (tiendaData.telefono !== undefined) variables.input.telefono = tiendaData.telefono
+      if (tiendaData.direccion !== undefined) variables.input.direccion = tiendaData.direccion
 
-        // ✅ IMPORTANTE: Solo agregar si hay archivo nuevo
-        if (fotoPerfil instanceof File) {
+      if (fotoPerfil instanceof File) {
         variables.fotoPerfil = fotoPerfil
-        }
+      }
 
-        if (codigoQr instanceof File) {
+      if (codigoQr instanceof File) {
         variables.codigoQr = codigoQr
-        }
+      }
 
-        console.log('Variables enviadas:', variables) // ✅ Para debug
-
-        const { data } = await client.mutate({
+      const { data } = await client.mutate({
         mutation: EDITAR_TIENDA,
-        variables,
-        context: {
-            // ✅ Forzar uso de FormData cuando hay archivos
-            hasUpload: !!(fotoPerfil || codigoQr)
-        }
-        })
+        variables
+      })
 
-        return {
+      return {
         success: true,
         data: data.editarTienda
-        }
+      }
     } catch (error) {
-        console.error('Error al editar tienda:', error)
-        console.error('Error completo:', JSON.stringify(error, null, 2)) // ✅ Debug
-        return {
+      console.error('Error al editar tienda:', error)
+      return {
         success: false,
         error: this.getErrorMessage(error)
-        }
+      }
     }
-    },
+  },
+
+
     
   async eliminar(id) {
     try {

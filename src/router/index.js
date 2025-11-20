@@ -9,6 +9,7 @@ import HomeView from '../pages/HomeView.vue'
 import ModeradorView from '../pages/ModeradorView.vue'
 import SuperAdminView from '../pages/SuperAdminView.vue'
 import TiendasView from '../pages/TiendasView.vue'  // ✅ Lista de tiendas
+import PerfilTiendaPrivada from '../pages/PerfilTiendaPrivada.vue'
 // import TiendaPerfilView from '../pages/TiendaPerfil.vue'  // ✅ Perfil individual (por crear)
 
 const routes = [
@@ -50,7 +51,7 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['moderador'] }
   },
 
-  // ✅ LISTA de todas las tiendas del usuario
+
   {
     path: '/tiendas',
     name: 'Tiendas',
@@ -58,13 +59,12 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   },
 
-  // ✅ PERFIL de una tienda específica
-  // {
-  //   path: '/tienda/:id',
-  //   name: 'TiendaPerfil',
-  //   component: TiendaPerfilView,
-  //   meta: { requiresAuth: true, allowedRoles: ['usuario'] }
-  // }
+  {
+    path: '/tienda/:id',
+    name: 'TiendaPerfilPrivada',
+    component: PerfilTiendaPrivada,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  }
 ]
 
 const router = createRouter({

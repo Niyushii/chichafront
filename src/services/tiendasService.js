@@ -2,8 +2,9 @@
 import client from '../apollo/apolloClient'
 import {
   GET_MIS_TIENDAS,
-  GET_TIENDA_BY_ID,
-  GET_TODAS_TIENDAS,
+  GET_MI_TIENDA,
+  GET_TIENDA_PUBLICA,
+  GET_TIENDAS_PUBLICAS,
   CREAR_TIENDA,
   EDITAR_TIENDA,
   ELIMINAR_TIENDA,
@@ -32,20 +33,20 @@ export const tiendasService = {
     }
   },
 
-  async obtenerPorId(id) {
+  async obtenerMiTienda(id) {
     try {
       const { data } = await client.query({
-        query: GET_TIENDA_BY_ID,
+        query: GET_MI_TIENDA,
         variables: { id },
         fetchPolicy: 'network-only'
       })
 
       return {
         success: true,
-        data: data.tiendaPorId
+        data: data.miTienda
       }
     } catch (error) {
-      console.error('Error al obtener tienda:', error)
+      console.error('Error al obtener mi tienda:', error)
       return {
         success: false,
         error: this.getErrorMessage(error)
@@ -53,20 +54,20 @@ export const tiendasService = {
     }
   },
 
-  async obtenerTodas(soloActivas = true) {
+  async obtenerTiendaPublica(id) {
     try {
       const { data } = await client.query({
-        query: GET_TODAS_TIENDAS,
-        variables: { soloActivas },
+        query: GET_TIENDA_PUBLICA,
+        variables: { id },
         fetchPolicy: 'network-only'
       })
 
       return {
         success: true,
-        data: data.todasTiendas
+        data: data.tiendaPublica
       }
     } catch (error) {
-      console.error('Error al obtener tiendas:', error)
+      console.error('Error al obtener tienda pública:', error)
       return {
         success: false,
         error: this.getErrorMessage(error)
@@ -74,7 +75,27 @@ export const tiendasService = {
     }
   },
 
-  async crear(tiendaData, fotoPerfil, codigoQr) {
+  async obtenerTiendasPublicas() {
+    try {
+      const { data } = await client.query({
+        query: GET_TIENDAS_PUBLICAS,
+        fetchPolicy: 'network-only'
+      })
+
+      return {
+        success: true,
+        data: data.tiendasPublicas
+      }
+    } catch (error) {
+      console.error('Error al obtener tiendas públicas:', error)
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async crear(tiendaData, fotoPerfil = null, codigoQr = null) {
     try {
       const variables = {
         input: {
@@ -85,11 +106,12 @@ export const tiendasService = {
         }
       }
 
-      if (fotoPerfil instanceof File) {
+      // Agregar archivos si existen
+      if (fotoPerfil) {
         variables.fotoPerfil = fotoPerfil
       }
 
-      if (codigoQr instanceof File) {
+      if (codigoQr) {
         variables.codigoQr = codigoQr
       }
 
@@ -111,26 +133,25 @@ export const tiendasService = {
     }
   },
 
-
-
-
-  async editar(id, tiendaData, fotoPerfil, codigoQr) {
+  async editar(id, tiendaData, fotoPerfil = null, codigoQr = null) {
     try {
       const variables = {
         id,
         input: {}
       }
 
+      // Solo agregar campos que tengan valor
       if (tiendaData.nombre) variables.input.nombre = tiendaData.nombre
       if (tiendaData.descripcion !== undefined) variables.input.descripcion = tiendaData.descripcion
       if (tiendaData.telefono !== undefined) variables.input.telefono = tiendaData.telefono
       if (tiendaData.direccion !== undefined) variables.input.direccion = tiendaData.direccion
 
-      if (fotoPerfil instanceof File) {
+      // Agregar archivos si existen
+      if (fotoPerfil) {
         variables.fotoPerfil = fotoPerfil
       }
 
-      if (codigoQr instanceof File) {
+      if (codigoQr) {
         variables.codigoQr = codigoQr
       }
 
@@ -152,8 +173,6 @@ export const tiendasService = {
     }
   },
 
-
-    
   async eliminar(id) {
     try {
       const { data } = await client.mutate({

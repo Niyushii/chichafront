@@ -1,7 +1,7 @@
 // src/graphql/tiendas.js
 import { gql } from '@apollo/client/core'
 
-// ========== QUERIES ==========
+// ========== QUERIES PRIVADAS (con token) ==========
 export const GET_MIS_TIENDAS = gql`
   query MisTiendas {
     misTiendas {
@@ -28,9 +28,9 @@ export const GET_MIS_TIENDAS = gql`
   }
 `
 
-export const GET_TIENDA_BY_ID = gql`
-  query TiendaPorId($id: ID!) {
-    tiendaPorId(id: $id) {
+export const GET_MI_TIENDA = gql`
+  query MiTienda($id: ID!) {
+    miTienda(id: $id) {
       id
       nombre
       descripcion
@@ -55,9 +55,32 @@ export const GET_TIENDA_BY_ID = gql`
   }
 `
 
-export const GET_TODAS_TIENDAS = gql`
-  query TodasTiendas($soloActivas: Boolean) {
-    todasTiendas(soloActivas: $soloActivas) {
+// ========== QUERIES PÚBLICAS (sin token) ==========
+export const GET_TIENDA_PUBLICA = gql`
+  query TiendaPublica($id: ID!) {
+    tiendaPublica(id: $id) {
+      id
+      nombre
+      descripcion
+      telefono
+      direccion
+      fotoPerfil
+      codigoQr
+      estado {
+        nombre
+      }
+      propietario {
+        nombre
+        apellidos
+      }
+      fechaCreacion
+    }
+  }
+`
+
+export const GET_TIENDAS_PUBLICAS = gql`
+  query TiendasPublicas {
+    tiendasPublicas {
       id
       nombre
       descripcion
@@ -137,4 +160,3 @@ export const ELIMINAR_CODIGO_QR = gql`
     }
   }
 `
-

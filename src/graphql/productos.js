@@ -10,6 +10,10 @@ export const GET_PRODUCTOS_TIENDA = gql`
       precio
       stock
       descripcion
+      tienda{
+        id
+        nombre
+      }
       talla {
         id
         nombre
@@ -139,6 +143,10 @@ export const GET_PRODUCTOS_POR_CATEGORIA = gql`
       id
       precio
       descripcion
+      tienda{
+        id
+        nombre
+      }
       imagenes { archivo }
       talla { id nombre }
       producto {

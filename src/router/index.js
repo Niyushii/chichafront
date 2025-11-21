@@ -17,6 +17,7 @@ import EditarProducto from '../components/EditarProducto.vue'
 import AboutView from '../pages/AboutView.vue'
 import ComoFuncionaView from '../pages/ComoFuncionaView.vue'
 import CategoriasView from '../pages/CategoriasView.vue'
+import ComprarProductoView from '../pages/ComprarProductoView.vue'
 
 const routes = [
   // Login y Registro (sin autenticación)
@@ -125,7 +126,13 @@ const routes = [
     name: 'Categorias',
     component: CategoriasView,
     meta: { requiresAuth: false }
-  }
+  },
+  {
+    path: '/comprar/:tiendaId/:productoId',
+    name: 'ComprarProducto', 
+    component: ComprarProductoView,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] } 
+  }
 ]
 
 const router = createRouter({

@@ -80,11 +80,10 @@
       </button>
       
       <button 
-        @click="$emit('comprar', producto)"
-        class="btn-accion btn-comprar"
-      >
-        <i class="pi pi-shopping-cart"></i>
-        <span>{{ producto.stock >=  0 ? 'Comprar' : 'Agotado' }}</span>
+          @click="manejarComprar" 
+          class="btn-accion btn-comprar">
+          <i class="pi pi-shopping-cart"></i>
+          <span>{{ producto.stock >= 0 ? 'Comprar' : 'Agotado' }}</span>
       </button>
     </div>
   </div>
@@ -92,6 +91,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMutation, useQuery } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
 
@@ -106,7 +106,11 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['ver-detalle', 'comprar', 'favorito-cambiado'])
+console.log("Estructura", props.producto);
+
+const emit = defineEmits(['ver-detalle', 'comprar', 'favorito-cambiado', 'ir-a-comprar'])
+
+const router = useRouter()
 
 const esFavorito = ref(false)
 const loadingFavorito = ref(false)
@@ -181,6 +185,23 @@ const toggleFavorito = async () => {
     loadingFavorito.value = false
   }
 }
+const manejarComprar = () => {
+  const tiendaId = props.producto.tienda?.id || props.producto.producto?.tienda?.id;
+  if (!tiendaId) {
+        console.error("Error: ID de la tienda no encontrado en el objeto producto.");
+        // Puedes agregar una notificación al usuario aquí
+        return; 
+    }
+  emit('comprar', props.producto)
+  router.push({
+      name: 'ComprarProducto',
+      params: { 
+        tiendaId:tiendaId,
+        productoId: props.producto.id // Pasa el ID del producto como parámetro
+        }
+    })
+    
+  }
 </script>
 
 <style scoped>

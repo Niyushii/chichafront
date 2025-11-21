@@ -11,6 +11,7 @@ import SuperAdminView from '../pages/SuperAdminView.vue'
 import TiendasView from '../pages/TiendasView.vue'
 import PerfilTiendaPrivada from '../pages/PerfilTiendaPrivada.vue'
 import CrearProducto from '../components/CrearProducto.vue'
+import EditarProducto from '../components/EditarProducto.vue' 
 
 const routes = [
   // Login y Registro (sin autenticación)
@@ -75,11 +76,11 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   },
 
-  // Editar producto ✨ NUEVA RUTA
+  // Editar producto
   {
     path: '/tienda/:id/producto/:productoId/editar',
     name: 'EditarProducto',
-    component: CrearProducto, // Reutilizamos el mismo componente
+    component: EditarProducto,
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   }
 ]

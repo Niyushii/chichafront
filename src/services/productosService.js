@@ -19,7 +19,7 @@ export const productosService = {
         variables: { tiendaId },
         fetchPolicy: 'network-only'
         })
-        return data.productosDeTienda  // ✅ Cambiar aquí también
+        return data.productosDeTienda 
     } catch (error) {
         console.error('Error al obtener productos:', error)
         throw new Error(this.getErrorMessage(error))

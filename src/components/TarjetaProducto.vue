@@ -1,3 +1,4 @@
+<!-- src/components/TarjetaProducto.vue -->
 <template>
   <div class="tarjeta-producto">
     <div class="producto-imagen">
@@ -52,7 +53,7 @@
 
     <div class="producto-acciones">
       <button 
-        @click="editarProducto"
+        @click="EditarProducto"
         class="btn-icono btn-editar"
         title="Editar producto"
       >
@@ -88,7 +89,7 @@ const formatearPrecio = (precio) => {
   return parseFloat(precio).toFixed(2)
 }
 
-const editarProducto = () => {
+const EditarProducto = () => {
   // Obtenemos el ID de la tienda desde la ruta actual
   const tiendaId = route.params.id
   

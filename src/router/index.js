@@ -13,7 +13,9 @@ import TiendasView from '../pages/TiendasView.vue'
 import PerfilTiendaPrivada from '../pages/PerfilTiendaPrivada.vue'
 import PerfilTiendaPublica from '../pages/PerfilTiendaPublica.vue'
 import CrearProducto from '../components/CrearProducto.vue'
-import EditarProducto from '../components/EditarProducto.vue' 
+import EditarProducto from '../components/EditarProducto.vue'
+import AboutView from '../pages/AboutView.vue'
+import ComoFuncionaView from '../pages/ComoFuncionaView.vue'
 
 const routes = [
   // Login y Registro (sin autenticación)
@@ -27,6 +29,20 @@ const routes = [
     path: '/registro',
     name: 'Registro',
     component: RegistroPage,
+    meta: { requiresAuth: false }
+  },
+  
+  // Páginas públicas
+  {
+    path: '/about',
+    name: 'About',
+    component: AboutView,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/como-funciona',
+    name: 'ComoFunciona',
+    component: ComoFuncionaView,
     meta: { requiresAuth: false }
   },
   
@@ -70,7 +86,7 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   },
 
-  // Perfil de tienda
+  // Perfil de tienda privada
   {
     path: '/tienda/:id',
     name: 'TiendaPerfilPrivada',
@@ -78,6 +94,7 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   },
 
+  // Perfil de tienda pública
   {
     path: '/tienda-publica/:id',
     name: 'TiendaPerfilPublica',

@@ -12,19 +12,19 @@ import {
 } from '../graphql/productos'
 
 export const productosService = {
-  async obtenerProductosTienda(tiendaId) {
+    async obtenerProductosTienda(tiendaId) {
     try {
-      const { data } = await client.query({
+        const { data } = await client.query({
         query: GET_PRODUCTOS_TIENDA,
         variables: { tiendaId },
         fetchPolicy: 'network-only'
-      })
-      return data.productosTienda
+        })
+        return data.productosDeTienda  // ✅ Cambiar aquí también
     } catch (error) {
-      console.error('Error al obtener productos:', error)
-      throw new Error(this.getErrorMessage(error))
+        console.error('Error al obtener productos:', error)
+        throw new Error(this.getErrorMessage(error))
     }
-  },
+    },
 
   async obtenerProducto(id) {
     try {

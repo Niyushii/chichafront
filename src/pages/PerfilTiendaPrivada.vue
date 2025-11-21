@@ -1,4 +1,3 @@
-<!-- src/pages/PerfilTiendaPrivada.vue -->
 <template>
   <div class="perfil-container">
     <!-- Header -->
@@ -89,15 +88,40 @@
           </div>
         </div>
 
-        <!-- Sección de productos (por hacer) -->
+        <!-- Sección de productos -->
         <div class="seccion">
-          <h2><i class="pi pi-shopping-bag"></i> Productos</h2>
-          <div class="productos-empty">
+          <div class="productos-header">
+            <h2><i class="pi pi-shopping-bag"></i> Productos</h2>
+            <button @click="router.push(`/tienda/${tienda.id}/producto/crear`)" class="btn-agregar-producto">
+              <i class="pi pi-plus"></i>
+              <span>Agregar Producto</span>
+            </button>
+          </div>
+
+          <!-- Loading productos -->
+          <div v-if="loadingProductos" class="productos-loading">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Cargando productos...</p>
+          </div>
+
+          <!-- Grid de productos -->
+          <div v-else-if="productos.length > 0" class="productos-grid">
+            <TarjetaProducto 
+              v-for="producto in productos" 
+              :key="producto.id"
+              :producto="producto"
+              @editar="editarProducto"
+              @eliminar="confirmarEliminarProducto"
+            />
+          </div>
+
+          <!-- Sin productos -->
+          <div v-else class="productos-empty">
             <i class="pi pi-shopping-bag"></i>
             <p>Aún no tienes productos en esta tienda</p>
             <button @click="router.push(`/tienda/${tienda.id}/producto/crear`)" class="btn-agregar">
-            <i class="pi pi-plus"></i>
-            <span>Agregar Producto</span>
+              <i class="pi pi-plus"></i>
+              <span>Agregar Primer Producto</span>
             </button>
           </div>
         </div>
@@ -215,12 +239,16 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { tiendasService } from '../services/tiendasService'
+import { productosService } from '../services/productosService'
+import TarjetaProducto from '../components/TarjetaProducto.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const tienda = ref(null)
+const productos = ref([])
 const loading = ref(false)
+const loadingProductos = ref(false)
 const loadingEditar = ref(false)
 const error = ref('')
 
@@ -237,6 +265,7 @@ const archivoCodigoQr = ref(null)
 
 onMounted(() => {
   cargarTienda()
+  cargarProductos()
 })
 
 const cargarTienda = async () => {
@@ -250,6 +279,20 @@ const cargarTienda = async () => {
     tienda.value = result.data
   } else {
     error.value = result.error
+  }
+}
+
+const cargarProductos = async () => {
+  loadingProductos.value = true
+  const tiendaId = route.params.id
+  
+  try {
+    const productosData = await productosService.obtenerProductosTienda(tiendaId)
+    productos.value = productosData
+  } catch (err) {
+    console.error('Error al cargar productos:', err)
+  } finally {
+    loadingProductos.value = false
   }
 }
 
@@ -310,6 +353,24 @@ const confirmarEliminar = async () => {
     router.push('/tiendas')
   } else {
     error.value = result.error
+  }
+}
+
+const editarProducto = (producto) => {
+  // Por ahora solo mostramos un alert, luego crearás el modal de edición
+  alert(`Editar producto: ${producto.producto.nombre}`)
+}
+
+const confirmarEliminarProducto = async (producto) => {
+  if (!confirm(`¿Estás seguro de eliminar "${producto.producto.nombre}"?`)) {
+    return
+  }
+
+  try {
+    await productosService.eliminar(producto.id)
+    await cargarProductos()
+  } catch (err) {
+    error.value = err.message
   }
 }
 
@@ -521,6 +582,53 @@ const cerrarModal = () => {
   max-width: 300px;
   border: 5px solid var(--cafe-claro);
   border-radius: 15px;
+}
+
+.productos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.productos-header h2 {
+  margin: 0;
+}
+
+.btn-agregar-producto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--cafe), var(--naranja-opaco));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-agregar-producto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(111, 72, 39, 0.3);
+}
+
+.productos-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--gris-claro);
+}
+
+.productos-loading i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .productos-empty {

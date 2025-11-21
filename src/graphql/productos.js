@@ -4,7 +4,7 @@ import { gql } from "@apollo/client";
 // Obtener productos de una tienda
 export const GET_PRODUCTOS_TIENDA = gql`
   query GetProductosTienda($tiendaId: ID!) {
-    productosTienda(tiendaId: $tiendaId) {
+    productosDeTienda(tiendaId: $tiendaId) {
       id
       precio
       stock

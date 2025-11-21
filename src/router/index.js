@@ -8,7 +8,7 @@ import RegistroPage from '../pages/RegistroPage.vue'
 import HomeView from '../pages/HomeView.vue'
 import ModeradorView from '../pages/ModeradorView.vue'
 import SuperAdminView from '../pages/SuperAdminView.vue'
-import TiendasView from '../pages/TiendasView.vue'  // ✅ Lista de tiendas
+import TiendasView from '../pages/TiendasView.vue'
 import PerfilTiendaPrivada from '../pages/PerfilTiendaPrivada.vue'
 import CrearProducto from '../components/CrearProducto.vue'
 
@@ -51,7 +51,7 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['moderador'] }
   },
 
-
+  // Lista de tiendas
   {
     path: '/tiendas',
     name: 'Tiendas',
@@ -59,6 +59,7 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   },
 
+  // Perfil de tienda
   {
     path: '/tienda/:id',
     name: 'TiendaPerfilPrivada',
@@ -66,10 +67,19 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   },
 
+  // Crear producto
   {
     path: '/tienda/:id/producto/crear',
     name: 'CrearProducto',
     component: CrearProducto,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  },
+
+  // Editar producto ✨ NUEVA RUTA
+  {
+    path: '/tienda/:id/producto/:productoId/editar',
+    name: 'EditarProducto',
+    component: CrearProducto, // Reutilizamos el mismo componente
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   }
 ]

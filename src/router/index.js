@@ -8,8 +8,10 @@ import RegistroPage from '../pages/RegistroPage.vue'
 import HomeView from '../pages/HomeView.vue'
 import ModeradorView from '../pages/ModeradorView.vue'
 import SuperAdminView from '../pages/SuperAdminView.vue'
+import PerfilUsuario from '../pages/PerfilUsuario.vue'
 import TiendasView from '../pages/TiendasView.vue'
 import PerfilTiendaPrivada from '../pages/PerfilTiendaPrivada.vue'
+import PerfilTiendaPublica from '../pages/PerfilTiendaPublica.vue'
 import CrearProducto from '../components/CrearProducto.vue'
 import EditarProducto from '../components/EditarProducto.vue' 
 
@@ -52,6 +54,14 @@ const routes = [
     meta: { requiresAuth: true, allowedRoles: ['moderador'] }
   },
 
+  // Perfil de usuario
+  {
+    path: '/perfil',
+    name: 'PerfilUsuario',
+    component: PerfilUsuario,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  },
+
   // Lista de tiendas
   {
     path: '/tiendas',
@@ -66,6 +76,13 @@ const routes = [
     name: 'TiendaPerfilPrivada',
     component: PerfilTiendaPrivada,
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  },
+
+  {
+    path: '/tienda-publica/:id',
+    name: 'TiendaPerfilPublica',
+    component: PerfilTiendaPublica,
+    meta: { requiresAuth: false }
   },
 
   // Crear producto

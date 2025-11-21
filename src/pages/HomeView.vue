@@ -14,7 +14,7 @@
     
     <div v-if="userData" class="user-info">
       <div class="avatar">
-        <i class="pi pi-user"></i>
+        <img class="avatar-img" src="../assets/img/fotoPerfil.png" alt="">
       </div>
       <h2>¡Hola, {{ userData.nombre }} {{ userData.apellidos }}!</h2>
       <div class="info-detalles">
@@ -40,7 +40,26 @@
         <i class="pi pi-user-edit"></i>
         <span>Editar Perfil</span>
       </button>
+
+      <!-- Nuevo botón: Favoritos -->
+      <button
+        @click="router.push('/favoritos')"
+        class="btn-favoritos"
+      >
+        <i class="pi pi-heart"></i>
+        <span>Favoritos</span>
+      </button>
+
+      <!-- Nuevo botón: Notificaciones -->
+      <button
+        @click="router.push('/notificaciones')"
+        class="btn-notificaciones"
+      >
+        <i class="pi pi-bell"></i>
+        <span>Notificaciones</span>
+      </button>
     </div>
+
   </div>
 </template>
 
@@ -123,6 +142,13 @@ const handleLogout = () => {
   color: white;
 }
 
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .user-info h2 {
   color: var(--cafe);
   margin: 0 0 20px 0;
@@ -152,12 +178,14 @@ const handleLogout = () => {
 
 .acciones {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(1, 2fr minmax(200px, 1fr));
   gap: 20px;
 }
 
 .btn-tiendas,
-.btn-perfil {
+.btn-perfil,
+.btn-favoritos,
+.btn-notificaciones {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -174,13 +202,17 @@ const handleLogout = () => {
 }
 
 .btn-tiendas i,
-.btn-perfil i {
+.btn-perfil i,
+.btn-favoritos i,
+.btn-notificaciones i {
   font-size: 3rem;
   color: var(--naranja-opaco);
 }
 
 .btn-tiendas:hover,
-.btn-perfil:hover {
+.btn-perfil:hover,
+.btn-favoritos:hover,
+.btn-notificaciones:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(111, 72, 39, 0.2);
   border-color: var(--naranja-opaco);
@@ -189,7 +221,9 @@ const handleLogout = () => {
 }
 
 .btn-tiendas:hover i,
-.btn-perfil:hover i {
+.btn-perfil:hover i,
+.btn-favoritos:hover i,
+.btn-notificaciones:hover i {
   color: white;
 }
 

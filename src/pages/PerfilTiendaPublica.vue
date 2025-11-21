@@ -177,7 +177,6 @@ const cargarProductos = async () => {
     const productosData = await productosService.obtenerProductosTienda(tiendaId)
     // Filtrar solo productos disponibles para el público
     productos.value = productosData.filter(p => 
-      p.stock > 0 && 
       !p.fecha_eliminacion
     )
   } catch (err) {

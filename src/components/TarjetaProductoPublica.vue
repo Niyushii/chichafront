@@ -83,7 +83,7 @@
           @click="manejarComprar" 
           class="btn-accion btn-comprar">
           <i class="pi pi-shopping-cart"></i>
-          <span>{{ producto.stock >= 0 ? 'Comprar' : 'Agotado' }}</span>
+          <span>Comprar</span>
       </button>
     </div>
   </div>

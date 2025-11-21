@@ -120,80 +120,92 @@
         </div>
 
         <div class="modal-body">
-          <!-- Info de la venta -->
-          <div class="venta-info">
-            <h3><i class="pi pi-shopping-cart"></i> Información de la Venta</h3>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="label">Cliente:</span>
-                <span class="value">{{ ventaResponder.usuario?.nombre }} {{ ventaResponder.usuario?.apellidos }}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Email:</span>
-                <span class="value">{{ ventaResponder.usuario?.email }}</span>
-              </div>
-              <div class="info-item total">
-                <span class="label">Total:</span>
-                <span class="value precio">Bs {{ ventaResponder.total }}</span>
-              </div>
+            <div v-if="ventaResponder">
+                <!-- Info de la venta / producto -->
+                <div class="venta-info">
+                <h3><i class="pi pi-shopping-cart"></i> Información de la Venta</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                    <span class="label">Cliente:</span>
+                    <span class="value">{{ ventaResponder.usuario?.nombre }} {{ ventaResponder.usuario?.apellidos }}</span>
+                    </div>
+                    <div class="info-item">
+                    <span class="label">Email:</span>
+                    <span class="value">{{ ventaResponder.usuario?.email }}</span>
+                    </div>
+                    <div class="info-item total">
+                    <span class="label">Total:</span>
+                    <span class="value precio">Bs {{ ventaResponder.total }}</span>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Comprobante -->
+                <div v-if="ventaResponder.comprobante" class="comprobante-section">
+                <h3><i class="pi pi-image"></i> Comprobante de Pago</h3>
+                <div class="comprobante-container">
+                    <img 
+                    :src="ventaResponder.comprobante" 
+                    alt="Comprobante de pago" 
+                    class="comprobante-img"
+                    @click="ampliarImagen(ventaResponder.comprobante)"
+                    />
+                    <p class="comprobante-tip">
+                    <i class="pi pi-info-circle"></i>
+                    Clic en la imagen para ampliar
+                    </p>
+                </div>
+                </div>
+
+                <!-- Mensaje para comprador si la venta ya fue respondida -->
+                <div v-if="modalEsRespuesta && !modalEsVendedor" class="mensaje-respuesta">
+                <p>
+                    <strong>Estado del pago:</strong> 
+                    <span v-if="ventaResponder.estadoPago === 'aceptado'">Pago Aceptado ✅</span>
+                    <span v-else-if="ventaResponder.estadoPago === 'rechazado'">Pago Rechazado ❌</span>
+                </p>
+                <p v-if="ventaResponder.motivoRechazo && ventaResponder.estadoPago === 'rechazado'">
+                    <strong>Motivo:</strong> {{ ventaResponder.motivoRechazo }}
+                </p>
+                </div>
+
+                <!-- Opciones de aceptación/rechazo para vendedor -->
+                <div v-if="modalEsVendedor">
+                <div class="opciones-section">
+                    <h3><i class="pi pi-check-square"></i> ¿El pago es válido?</h3>
+                    <div class="opciones-respuesta">
+                    <button 
+                        @click="respuestaSeleccionada = 'aceptar'"
+                        :class="['btn-opcion btn-aceptar', { 'seleccionado': respuestaSeleccionada === 'aceptar' }]"
+                    >
+                        <i class="pi pi-check-circle"></i>
+                        <span>Sí, Aceptar Pago</span>
+                    </button>
+                    <button 
+                        @click="respuestaSeleccionada = 'rechazar'"
+                        :class="['btn-opcion btn-rechazar', { 'seleccionado': respuestaSeleccionada === 'rechazar' }]"
+                    >
+                        <i class="pi pi-times-circle"></i>
+                        <span>No, Rechazar</span>
+                    </button>
+                    </div>
+                </div>
+
+                <!-- Motivo de rechazo -->
+                <div v-if="respuestaSeleccionada === 'rechazar'" class="campo motivo-campo">
+                    <label for="motivo">Motivo del rechazo *</label>
+                    <textarea 
+                    id="motivo"
+                    v-model="motivoRechazo"
+                    rows="3"
+                    placeholder="Explica por qué rechazas el pago"
+                    class="input"
+                    ></textarea>
+                </div>
+                </div>
             </div>
-          </div>
-
-          <!-- Comprobante -->
-          <div v-if="ventaResponder.comprobante" class="comprobante-section">
-            <h3><i class="pi pi-image"></i> Comprobante de Pago</h3>
-            <div class="comprobante-container">
-              <img 
-                :src="ventaResponder.comprobante" 
-                alt="Comprobante de pago" 
-                class="comprobante-img"
-                @click="ampliarImagen(ventaResponder.comprobante)"
-              />
-              <p class="comprobante-tip">
-                <i class="pi pi-info-circle"></i>
-                Clic en la imagen para ampliar
-              </p>
             </div>
-          </div>
 
-          <div v-else class="sin-comprobante">
-            <i class="pi pi-exclamation-triangle"></i>
-            <p>El comprador no subió comprobante de pago</p>
-          </div>
-
-          <!-- Opciones de respuesta -->
-          <div class="opciones-section">
-            <h3><i class="pi pi-check-square"></i> ¿El pago es válido?</h3>
-            <div class="opciones-respuesta">
-              <button 
-                @click="respuestaSeleccionada = 'aceptar'"
-                :class="['btn-opcion btn-aceptar', { 'seleccionado': respuestaSeleccionada === 'aceptar' }]"
-              >
-                <i class="pi pi-check-circle"></i>
-                <span>Sí, Aceptar Pago</span>
-              </button>
-              <button 
-                @click="respuestaSeleccionada = 'rechazar'"
-                :class="['btn-opcion btn-rechazar', { 'seleccionado': respuestaSeleccionada === 'rechazar' }]"
-              >
-                <i class="pi pi-times-circle"></i>
-                <span>No, Rechazar</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Motivo de rechazo -->
-          <div v-if="respuestaSeleccionada === 'rechazar'" class="campo motivo-campo">
-            <label for="motivo">Motivo del rechazo *</label>
-            <textarea 
-              id="motivo"
-              v-model="motivoRechazo"
-              rows="3"
-              placeholder="Explica por qué rechazas el pago (ej: no se reflejó el monto, comprobante ilegible, etc.)"
-              class="input"
-            ></textarea>
-          </div>
-        </div>
 
         <div class="modal-footer">
           <button @click="cerrarModal" class="btn-secundario">
@@ -239,6 +251,16 @@ const respuestaSeleccionada = ref('')
 const motivoRechazo = ref('')
 const loadingRespuesta = ref(false)
 const imagenAmpliada = ref(null)
+
+const modalEsVendedor = computed(() => {
+  const role = 'vendedor' // cambiar según tu lógica real
+  return ventaResponder.value && role === 'vendedor' && !ventaResponder.value.estadoPago
+})
+
+// Modal para comprador que ya recibió respuesta
+const modalEsRespuesta = computed(() => {
+  return ventaResponder.value && ventaResponder.value.estadoPago
+})
 
 // Query para obtener notificaciones
 const MIS_NOTIFICACIONES = gql`
@@ -323,7 +345,7 @@ const notificacionesNoLeidas = computed(() => {
 })
 
 const notificacionesFiltradas = computed(() => {
-  let filtradas = notificaciones.value
+  let filtradas = [...notificaciones.value]
 
   switch (filtroActivo.value) {
     case 'noLeidas':
@@ -425,15 +447,24 @@ const marcarTodasLeidas = async () => {
   }
 }
 
+
 const verDetalle = async (notif) => {
   if (!notif.leida) {
-    await marcarLeida(notif.id)
+    await marcarLeida(notif.id) 
+  }
+  if (notif.ventaRelacionada){
+    abrirModalResponder(notif)
   }
 }
 
 const abrirModalResponder = (notif) => {
   if (notif.ventaRelacionada) {
-    ventaResponder.value = notif.ventaRelacionada
+    ventaResponder.value = {
+      ...notif.ventaRelacionada,
+      estadoPago: notif.tipo === 'venta_confirmada' ? 'aceptado' :
+                  notif.tipo === 'venta_rechazada' ? 'rechazado' : null,
+      motivoRechazo: notif.motivoRechazo || ''
+    }
     respuestaSeleccionada.value = ''
     motivoRechazo.value = ''
   }

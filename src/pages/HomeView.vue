@@ -1,64 +1,61 @@
-<!-- src/pages/HomeView.vue -->
 <template>
-  <div class="home-container">
-    <div class="header">
-      <h1>HOME</h1>
-      <button 
-        @click="handleLogout"
-        class="btn-logout"
-      >
-        <i class="pi pi-sign-out"></i>
-        <span>Cerrar Sesión</span>
-      </button>
-    </div>
-    
-    <div v-if="userData" class="user-info">
-      <div class="avatar">
-        <img class="avatar-img" src="../assets/img/fotoPerfil.png" alt="">
+  <div class="home-page">
+
+    <!-- Hero con carrusel -->
+    <section class="hero">
+      <div class="hero-carrusel">
+        <div 
+          v-for="(slide, index) in slides" 
+          :key="index" 
+          class="slide"
+          :class="{ active: index === activeSlide }"
+        >
+          <h2>{{ slide.titulo }}</h2>
+          <p>{{ slide.descripcion }}</p>
+        </div>
       </div>
-      <h2>¡Hola, {{ userData.nombre }} {{ userData.apellidos }}!</h2>
-      <div class="info-detalles">
-        <p><i class="pi pi-envelope"></i> {{ userData.email }}</p>
-        <p><i class="pi pi-at"></i> @{{ userData.username }}</p>
-        <p v-if="userData.celular"><i class="pi pi-phone"></i> {{ userData.celular }}</p>
+      <div class="carrusel-nav">
+        <button @click="prevSlide"><i class="pi pi-angle-left"></i></button>
+        <button @click="nextSlide"><i class="pi pi-angle-right"></i></button>
       </div>
-    </div>
+    </section>
 
-    <div class="acciones">
-      <button 
-        @click="router.push('/tiendas')"
-        class="btn-tiendas"
-      >
-        <i class="pi pi-shop"></i>
-        <span>Mis Tiendas</span>
-      </button>
+    <!-- Conoce tiendas -->
+    <section class="conoce-tiendas">
+      <h2>Conoce tiendas</h2>
+      <div v-if="loadingTiendas" class="loading">
+        <i class="pi pi-spin pi-spinner"></i> Cargando tiendas...
+      </div>
+      <div v-else class="tiendas-grid">
+        <div 
+          v-for="tienda in tiendas" 
+          :key="tienda.id" 
+          class="tarjeta-tienda"
+          @click="irTiendaPublica(tienda.id)"
+        >
+          <div class="foto-tienda">
+            <img :src="tienda.fotoPerfil || placeholder" :alt="tienda.nombre" />
+          </div>
+          <h3>{{ tienda.nombre }}</h3>
+          <p>{{ tienda.descripcion || 'Sin descripción' }}</p>
+        </div>
+      </div>
+    </section>
 
-      <button 
-        @click="router.push('/perfil')"
-        class="btn-perfil"
-      >
-        <i class="pi pi-user-edit"></i>
-        <span>Editar Perfil</span>
-      </button>
-
-      <!-- Nuevo botón: Favoritos -->
-      <button
-        @click="router.push('/favoritos')"
-        class="btn-favoritos"
-      >
-        <i class="pi pi-heart"></i>
-        <span>Favoritos</span>
-      </button>
-
-      <!-- Nuevo botón: Notificaciones -->
-      <button
-        @click="router.push('/notificaciones')"
-        class="btn-notificaciones"
-      >
-        <i class="pi pi-bell"></i>
-        <span>Notificaciones</span>
-      </button>
-    </div>
+    <!-- Explora por categorías -->
+    <section class="explora-categorias">
+      <h2>Explora por categorías</h2>
+      <div class="categorias-grid">
+        <div 
+          v-for="categoria in categoriasPrincipales" 
+          :key="categoria.id"
+          class="categoria-card"
+          @click="irCategoria(categoria.id)"
+        >
+          <span>{{ categoria.nombre }}</span>
+        </div>
+      </div>
+    </section>
 
   </div>
 </template>
@@ -66,180 +63,196 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { authService } from '../services/authService'
+import { tiendasService } from '../services/tiendasService'
+import categoriasService from '../services/categoriasService'
 
 const router = useRouter()
-const userData = ref(null)
 
-onMounted(() => {
-  userData.value = authService.getUserData()
+// Carrusel
+const slides = [
+  { titulo: 'Conoce la app', descripcion: 'Descubre cómo Chichawasi facilita la venta de ropa usada.' },
+  { titulo: 'Comienza a vender', descripcion: 'Crea tu tienda y llega a más clientes en Sucre.' },
+  { titulo: 'Promociona tus productos', descripcion: 'Organiza y muestra tus productos de forma fácil.' }
+]
+const activeSlide = ref(0)
+
+const nextSlide = () => {
+  activeSlide.value = (activeSlide.value + 1) % slides.length
+}
+const prevSlide = () => {
+  activeSlide.value = (activeSlide.value - 1 + slides.length) % slides.length
+}
+
+// Tiendas
+const tiendas = ref([])
+const loadingTiendas = ref(false)
+const placeholder = '/placeholder.png'
+
+// Categorías
+const categoriasPrincipales = ref([])
+const error = ref('')
+
+onMounted(async () => {
+  await cargarTiendas()
+  await cargarCategorias()
 })
 
-const handleLogout = () => {
-  authService.logout()
-  router.push('/login')
+const cargarTiendas = async () => {
+  loadingTiendas.value = true
+  const result = await tiendasService.obtenerTiendasPublicas()
+  if (result.success) {
+    tiendas.value = result.data
+  } else {
+    error.value = result.error
+  }
+  loadingTiendas.value = false
+}
+
+const cargarCategorias = async () => {
+  try {
+    const resultCategorias = await categoriasService.obtenerTodasCategorias(true, true)
+    categoriasPrincipales.value = resultCategorias
+  } catch (err) {
+    error.value = 'Error al cargar categorías: ' + err.message
+  }
+}
+
+const irTiendaPublica = (id) => {
+  router.push(`/tienda/${id}/publica`)
+}
+
+const irCategoria = (id) => {
+  router.push(`/categoria/${id}`)
 }
 </script>
 
 <style scoped>
-.home-container {
-  max-width: 800px;
+.home-page {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 20px;
 }
 
-.header {
+/* Hero carrusel */
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--cafe-claro), var(--naranja-opaco));
+  color: white;
+  padding: 60px 20px;
+  border-radius: 20px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.hero h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+}
+
+.hero-carrusel .slide {
+  display: none;
+  transition: opacity 0.5s ease;
+}
+
+.hero-carrusel .slide.active {
+  display: block;
+}
+
+.carrusel-nav {
+  position: absolute;
+  top: 50%;
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
+  transform: translateY(-50%);
 }
 
-.header h1 {
-  color: var(--cafe);
-  font-size: 2rem;
-  margin: 0;
-}
-
-.btn-logout {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background-color: transparent;
-  color: var(--cafe);
-  border: 2px solid var(--cafe);
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-logout:hover {
-  background-color: var(--cafe);
-  color: var(--crema);
-}
-
-.user-info {
-  background: white;
-  border: 2px solid var(--cafe-claro);
-  border-radius: 20px;
-  padding: 40px;
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.avatar {
-  width: 100px;
-  height: 100px;
+.carrusel-nav button {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  padding: 10px 15px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--cafe-claro), var(--naranja-opaco));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-  font-size: 3rem;
   color: white;
+  cursor: pointer;
+  font-size: 1.5rem;
 }
 
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.user-info h2 {
+/* Conoce tiendas */
+.conoce-tiendas h2,
+.explora-categorias h2 {
   color: var(--cafe);
-  margin: 0 0 20px 0;
+  margin-bottom: 20px;
   font-size: 1.8rem;
 }
 
-.info-detalles {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-}
-
-.info-detalles p {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--gris-oscuro);
-  margin: 0;
-  font-size: 1rem;
-}
-
-.info-detalles i {
-  color: var(--naranja-opaco);
-  font-size: 1.1rem;
-}
-
-.acciones {
+.tiendas-grid {
   display: grid;
-  grid-template-columns: repeat(1, 2fr minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
 }
 
-.btn-tiendas,
-.btn-perfil,
-.btn-favoritos,
-.btn-notificaciones {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  padding: 30px 20px;
-  border: 2px solid var(--cafe-claro);
-  border-radius: 15px;
+.tarjeta-tienda {
   background: white;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--cafe);
+  border: 2px solid var(--cafe-claro);
 }
 
-.btn-tiendas i,
-.btn-perfil i,
-.btn-favoritos i,
-.btn-notificaciones i {
-  font-size: 3rem;
-  color: var(--naranja-opaco);
-}
-
-.btn-tiendas:hover,
-.btn-perfil:hover,
-.btn-favoritos:hover,
-.btn-notificaciones:hover {
+.tarjeta-tienda:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(111, 72, 39, 0.2);
-  border-color: var(--naranja-opaco);
-  background: linear-gradient(135deg, var(--cafe-claro) 0%, var(--naranja-opaco) 100%);
-  color: white;
+  box-shadow: 0 8px 20px rgba(111,72,39,0.2);
 }
 
-.btn-tiendas:hover i,
-.btn-perfil:hover i,
-.btn-favoritos:hover i,
-.btn-notificaciones:hover i {
-  color: white;
+.foto-tienda {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 10px;
 }
 
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
-  }
-  
-  .user-info {
-    padding: 30px 20px;
-  }
-  
-  .acciones {
-    grid-template-columns: 1fr;
-  }
+.foto-tienda img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Categorías */
+.categorias-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.categoria-card {
+  background: linear-gradient(135deg, var(--cafe-claro), var(--naranja-opaco));
+  color: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.categoria-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(111,72,39,0.3);
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--gris-claro);
+}
+
+.loading i {
+  font-size: 2rem;
 }
 </style>

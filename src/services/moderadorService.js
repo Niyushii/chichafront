@@ -1,193 +1,351 @@
-// src/services/moderadorService.js
+// src/services/moderadorCompleto.js
 import client from '../apollo/apolloClient'
 import {
-    GET_TODOS_MODERADORES,
-    GET_MODERADOR_BY_ID,
-    GET_ESTADISTICAS_MODERADORES,
-    CREAR_MODERADOR,
-    EDITAR_MODERADOR,
-    ELIMINAR_MODERADOR
+  GET_TODOS_USUARIOS,
+  GET_USUARIO_POR_ID,
+  GET_ESTADISTICAS_USUARIOS,
+  GET_TIENDAS_ADMIN,
+  GET_TODOS_PRODUCTOS,
+  GET_PRODUCTO_POR_ID,
+  GET_TALLAS,
+  GET_AUDITORIA,
+  CREAR_TALLA,
+  EDITAR_TALLA,
+  ELIMINAR_TALLA,
+  CREAR_TALLAS_MASIVAS,
+  EDITAR_PRODUCTO_MOD,
+  ELIMINAR_PRODUCTO_MOD,
+  ELIMINAR_TIENDA_MOD,
+  EDITAR_TIENDA_MOD
 } from '../graphql/moderadores'
-import { gql } from '@apollo/client/core'
-
-// Mutation adicional para cambiar estado
-const CAMBIAR_ESTADO_MODERADOR = gql`
-  mutation CambiarEstadoModerador($moderadorId: ID!, $nuevoEstado: String!) {
-    cambiarEstadoModerador(moderadorId: $moderadorId, nuevoEstado: $nuevoEstado) {
-      moderador {
-        id
-        estado {
-          id
-          nombre
-        }
-      }
-      mensaje
-    }
-  }
-`
 
 export const moderadoresService = {
-    async obtenerTodos(soloActivos = false) {
-        try {
-            const { data } = await client.query({
-                query: GET_TODOS_MODERADORES,
-                fetchPolicy: 'network-only'
-            })
-
-            // Filtrar en el frontend si es necesario
-            let moderadores = data.todosModeradores || []
-            
-            if (soloActivos) {
-                moderadores = moderadores.filter(m => 
-                    m.estado.nombre.toLowerCase() === 'activo'
-                )
-            }
-
-            return {
-                success: true,
-                data: moderadores
-            }
-        } catch (error) {
-            console.error('Error al obtener moderadores:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    async obtenerPorId(id) {
-        try {
-            const { data } = await client.query({
-                query: GET_MODERADOR_BY_ID,
-                variables: { id },
-                fetchPolicy: 'network-only'
-            })
-
-            return {
-                success: true,
-                data: data.moderadorPorId
-            }
-        } catch (error) {
-            console.error('Error al obtener moderador:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    async obtenerEstadisticas() {
-        try {
-            const { data } = await client.query({
-                query: GET_ESTADISTICAS_MODERADORES,
-                fetchPolicy: 'network-only'
-            })
-
-            return {
-                success: true,
-                data: data.estadisticasModeradores
-            }
-        } catch (error) {
-            console.error('Error al obtener estadísticas:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    async crear(moderadorData) {
-        try {
-            const { data } = await client.mutate({
-                mutation: CREAR_MODERADOR,
-                variables: {
-                    input: moderadorData
-                }
-            })
-
-            return {
-                success: true,
-                data: data.crearModerador
-            }
-        } catch (error) {
-            console.error('Error al crear moderador:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    async editar(id, moderadorData) {
-        try {
-            const { data } = await client.mutate({
-                mutation: EDITAR_MODERADOR,
-                variables: {
-                    id,
-                    input: moderadorData
-                }
-            })
-
-            return {
-                success: true,
-                data: data.editarModerador
-            }
-        } catch (error) {
-            console.error('Error al editar moderador:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    async eliminar(id) {
-        try {
-            const { data } = await client.mutate({
-                mutation: ELIMINAR_MODERADOR,
-                variables: { id }
-            })
-
-            return {
-                success: true,
-                data: data.eliminarModerador
-            }
-        } catch (error) {
-            console.error('Error al eliminar moderador:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    async cambiarEstado(moderadorId, nuevoEstado) {
-        try {
-            const { data } = await client.mutate({
-                mutation: CAMBIAR_ESTADO_MODERADOR,
-                variables: { moderadorId, nuevoEstado }
-            })
-
-            return {
-                success: true,
-                data: data.cambiarEstadoModerador
-            }
-        } catch (error) {
-            console.error('Error al cambiar estado:', error)
-            return {
-                success: false,
-                error: this.getErrorMessage(error)
-            }
-        }
-    },
-
-    getErrorMessage(error) {
-        if (error.networkError) {
-            return `Error de red: ${error.networkError.message}`
-        } else if (error.graphQLErrors && error.graphQLErrors.length > 0) {
-            return error.graphQLErrors[0].message
-        }
-        return error.message || 'Error desconocido'
+  // ========== USUARIOS ==========
+  async obtenerTodosUsuarios(soloActivos = true, esVendedor = null, buscar = null) {
+    try {
+      const { data } = await client.query({
+        query: GET_TODOS_USUARIOS,
+        variables: { soloActivos, esVendedor, buscar },
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.todosUsuarios
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
     }
+  },
+
+  async obtenerUsuarioPorId(id) {
+    try {
+      const { data } = await client.query({
+        query: GET_USUARIO_POR_ID,
+        variables: { id },
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.usuarioPorId
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async obtenerEstadisticasUsuarios() {
+    try {
+      const { data } = await client.query({
+        query: GET_ESTADISTICAS_USUARIOS,
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.estadisticasUsuarios
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  // ========== TIENDAS ==========
+  async obtenerTodasTiendas() {
+    try {
+      const { data } = await client.query({
+        query: GET_TIENDAS_ADMIN,
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.tiendasAdmin
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async eliminarTienda(id) {
+    try {
+      const { data } = await client.mutate({
+        mutation: ELIMINAR_TIENDA_MOD,
+        variables: { id }
+      })
+      return {
+        success: true,
+        data: data.eliminarTienda
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  // ========== PRODUCTOS ==========
+  async obtenerTodosProductos(limit = 50, offset = 0) {
+    try {
+      const { data } = await client.query({
+        query: GET_TODOS_PRODUCTOS,
+        variables: { limit, offset },
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.todosProductos
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async obtenerProductoPorId(id) {
+    try {
+      const { data } = await client.query({
+        query: GET_PRODUCTO_POR_ID,
+        variables: { id },
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.productoPorId
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async editarProducto(input) {
+    try {
+      const { data } = await client.mutate({
+        mutation: EDITAR_PRODUCTO_MOD,
+        variables: { input }
+      })
+      return {
+        success: true,
+        data: data.editarProducto
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async eliminarProducto(tiendaProductoId) {
+    try {
+      const { data } = await client.mutate({
+        mutation: ELIMINAR_PRODUCTO_MOD,
+        variables: { tiendaProductoId }
+      })
+      return {
+        success: true,
+        data: data.eliminarProducto
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  // ========== TALLAS ==========
+  async obtenerTallas() {
+    try {
+      const { data } = await client.query({
+        query: GET_TALLAS,
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.tallas
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async crearTalla(input) {
+    try {
+      const { data } = await client.mutate({
+        mutation: CREAR_TALLA,
+        variables: { input }
+      })
+      return {
+        success: true,
+        data: data.crearTalla
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async editarTalla(id, input) {
+    try {
+      const { data } = await client.mutate({
+        mutation: EDITAR_TALLA,
+        variables: { id, input }
+      })
+      return {
+        success: true,
+        data: data.editarTalla
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async eliminarTalla(id) {
+    try {
+      const { data } = await client.mutate({
+        mutation: ELIMINAR_TALLA,
+        variables: { id }
+      })
+      return {
+        success: true,
+        data: data.eliminarTalla
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async crearTallasMasivas(nombres) {
+    try {
+      const { data } = await client.mutate({
+        mutation: CREAR_TALLAS_MASIVAS,
+        variables: { nombres }
+      })
+      return {
+        success: true,
+        data: data.crearTallasMasivas
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  // ========== AUDITORÍA ==========
+  async obtenerAuditoria() {
+    try {
+      const { data } = await client.query({
+        query: GET_AUDITORIA,
+        fetchPolicy: 'network-only'
+      })
+      return {
+        success: true,
+        data: data.auditoria
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  async editar(id, tiendaData, fotoPerfil = null, codigoQr = null) {
+    try {
+      const variables = {
+        id,
+        input: {}
+      }
+
+      // Solo agregar campos que tengan valor
+      if (tiendaData.nombre) variables.input.nombre = tiendaData.nombre
+      if (tiendaData.descripcion !== undefined) variables.input.descripcion = tiendaData.descripcion
+      if (tiendaData.telefono !== undefined) variables.input.telefono = tiendaData.telefono
+      if (tiendaData.direccion !== undefined) variables.input.direccion = tiendaData.direccion
+
+      // Agregar archivos si existen
+      if (fotoPerfil) {
+        variables.fotoPerfil = fotoPerfil
+      }
+
+      if (codigoQr) {
+        variables.codigoQr = codigoQr
+      }
+
+      const { data } = await client.mutate({
+        mutation: EDITAR_TIENDA_MOD,
+        variables
+      })
+
+      return {
+        success: true,
+        data: data.editarTienda
+      }
+    } catch (error) {
+      console.error('Error al editar tienda:', error)
+      return {
+        success: false,
+        error: this.getErrorMessage(error)
+      }
+    }
+  },
+
+  // ========== UTILIDADES ==========
+  getErrorMessage(error) {
+    if (error.networkError) {
+      return `Error de red: ${error.networkError.message}`
+    } else if (error.graphQLErrors && error.graphQLErrors.length > 0) {
+      return error.graphQLErrors[0].message
+    }
+    return error.message || 'Error desconocido'
+  }
 }

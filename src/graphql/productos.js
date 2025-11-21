@@ -13,6 +13,7 @@ export const GET_PRODUCTOS_TIENDA = gql`
       tienda{
         id
         nombre
+        codigoQr
       }
       talla {
         id

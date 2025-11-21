@@ -18,7 +18,7 @@ import AboutView from '../pages/AboutView.vue'
 import ComoFuncionaView from '../pages/ComoFuncionaView.vue'
 import CategoriasView from '../pages/CategoriasView.vue'
 import ComprarProductoView from '../pages/ComprarProductoView.vue'
-
+import NotificacionesView from '../pages/NotificacionesView.vue'
 const routes = [
   // Login y Registro (sin autenticación)
   {
@@ -128,11 +128,19 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
-    path: '/comprar/:tiendaId/:productoId',
-    name: 'ComprarProducto', 
-    component: ComprarProductoView,
-    meta: { requiresAuth: true, allowedRoles: ['usuario'] } 
-  }
+    path: '/comprar/:tiendaId/:productoId',
+    name: 'ComprarProducto', 
+    component: ComprarProductoView,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] } 
+  },
+  //Notificaciones
+  {
+    path: '/notificaciones',
+    name: 'Notificaciones',
+    component: NotificacionesView,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  }
+
 ]
 
 const router = createRouter({

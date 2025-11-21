@@ -2,7 +2,7 @@
 <template>
   <div class="home-container">
     <div class="header">
-      <h1>Bienvenido a Chichawasi</h1>
+      <h1>HOME</h1>
       <button 
         @click="handleLogout"
         class="btn-logout"

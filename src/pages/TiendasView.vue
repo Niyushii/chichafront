@@ -1,6 +1,10 @@
 <template>
   <div class="tiendas-container">
     <div class="header">
+      <button @click="router.push('/')" class="btn-volver">
+                <i class="pi pi-arrow-left"></i>
+                <span>Volver</span>
+      </button>
       <h1>Mis Tiendas</h1>
       <button @click="mostrarFormularioCrear = true" class="btn-crear">
         <i class="pi pi-plus"></i>
@@ -368,6 +372,20 @@ const cerrarModal = () => {
   color: var(--cafe);
   font-size: 2rem;
   margin: 0;
+}
+
+.btn-volver {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: transparent;
+  color: var(--cafe);
+  border: 2px solid var(--cafe);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .btn-crear {

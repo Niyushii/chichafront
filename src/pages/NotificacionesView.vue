@@ -34,13 +34,13 @@
         @click="filtroActivo = 'compras'"
         :class="['btn-filtro', { 'activo': filtroActivo === 'compras' }]"
       >
-        Compras
+        Mis Compras
       </button>
       <button 
         @click="filtroActivo = 'ventas'"
         :class="['btn-filtro', { 'activo': filtroActivo === 'ventas' }]"
       >
-        Ventas
+        Mis Ventas
       </button>
     </div>
 
@@ -83,8 +83,8 @@
 
         <div class="notif-acciones">
           <button 
-            v-if="notif.tipo === 'venta_pendiente'"
-            @click.stop="responderVenta(notif)"
+            v-if="notif.tipo === 'venta_pendiente' && notif.ventaRelacionada"
+            @click.stop="abrirModalResponder(notif)"
             class="btn-accion btn-responder"
           >
             <i class="pi pi-reply"></i>
@@ -94,6 +94,7 @@
             v-if="!notif.leida"
             @click.stop="marcarLeida(notif.id)"
             class="btn-accion btn-marcar"
+            title="Marcar como leída"
           >
             <i class="pi pi-check"></i>
           </button>
@@ -109,55 +110,86 @@
     </div>
 
     <!-- Modal Responder Venta -->
-    <div v-if="ventaResponder" class="modal">
+    <div v-if="ventaResponder" class="modal-overlay" @click.self="cerrarModal">
       <div class="modal-contenido">
         <div class="modal-header">
-          <h2>Responder Solicitud de Compra</h2>
+          <h2>Verificar Pago</h2>
           <button @click="cerrarModal" class="btn-cerrar">
             <i class="pi pi-times"></i>
           </button>
         </div>
 
         <div class="modal-body">
+          <!-- Info de la venta -->
           <div class="venta-info">
-            <h3>Información de la Venta</h3>
-            <p><strong>Cliente:</strong> {{ ventaResponder.usuario?.nombre || 'N/A' }}</p>
-            <p><strong>Total:</strong> Bs {{ ventaResponder.total }}</p>
+            <h3><i class="pi pi-shopping-cart"></i> Información de la Venta</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Cliente:</span>
+                <span class="value">{{ ventaResponder.usuario?.nombre }} {{ ventaResponder.usuario?.apellidos }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Email:</span>
+                <span class="value">{{ ventaResponder.usuario?.email }}</span>
+              </div>
+              <div class="info-item total">
+                <span class="label">Total:</span>
+                <span class="value precio">Bs {{ ventaResponder.total }}</span>
+              </div>
+            </div>
           </div>
 
           <!-- Comprobante -->
           <div v-if="ventaResponder.comprobante" class="comprobante-section">
-            <h3>Comprobante de Pago</h3>
-            <img :src="ventaResponder.comprobante" alt="Comprobante" class="comprobante-img" />
+            <h3><i class="pi pi-image"></i> Comprobante de Pago</h3>
+            <div class="comprobante-container">
+              <img 
+                :src="ventaResponder.comprobante" 
+                alt="Comprobante de pago" 
+                class="comprobante-img"
+                @click="ampliarImagen(ventaResponder.comprobante)"
+              />
+              <p class="comprobante-tip">
+                <i class="pi pi-info-circle"></i>
+                Clic en la imagen para ampliar
+              </p>
+            </div>
           </div>
 
-          <div class="campo">
-            <label>¿Verificaste el pago?</label>
+          <div v-else class="sin-comprobante">
+            <i class="pi pi-exclamation-triangle"></i>
+            <p>El comprador no subió comprobante de pago</p>
+          </div>
+
+          <!-- Opciones de respuesta -->
+          <div class="opciones-section">
+            <h3><i class="pi pi-check-square"></i> ¿El pago es válido?</h3>
             <div class="opciones-respuesta">
               <button 
                 @click="respuestaSeleccionada = 'aceptar'"
-                :class="['btn-opcion', { 'seleccionado': respuestaSeleccionada === 'aceptar' }]"
+                :class="['btn-opcion btn-aceptar', { 'seleccionado': respuestaSeleccionada === 'aceptar' }]"
               >
-                <i class="pi pi-check"></i>
-                <span>Aceptar Pago</span>
+                <i class="pi pi-check-circle"></i>
+                <span>Sí, Aceptar Pago</span>
               </button>
               <button 
                 @click="respuestaSeleccionada = 'rechazar'"
-                :class="['btn-opcion', { 'seleccionado': respuestaSeleccionada === 'rechazar' }]"
+                :class="['btn-opcion btn-rechazar', { 'seleccionado': respuestaSeleccionada === 'rechazar' }]"
               >
-                <i class="pi pi-times"></i>
-                <span>Rechazar Pago</span>
+                <i class="pi pi-times-circle"></i>
+                <span>No, Rechazar</span>
               </button>
             </div>
           </div>
 
-          <div v-if="respuestaSeleccionada === 'rechazar'" class="campo">
+          <!-- Motivo de rechazo -->
+          <div v-if="respuestaSeleccionada === 'rechazar'" class="campo motivo-campo">
             <label for="motivo">Motivo del rechazo *</label>
             <textarea 
               id="motivo"
               v-model="motivoRechazo"
               rows="3"
-              placeholder="Explica por qué rechazas el pago..."
+              placeholder="Explica por qué rechazas el pago (ej: no se reflejó el monto, comprobante ilegible, etc.)"
               class="input"
             ></textarea>
           </div>
@@ -165,18 +197,27 @@
 
         <div class="modal-footer">
           <button @click="cerrarModal" class="btn-secundario">
+            <i class="pi pi-times"></i>
             Cancelar
           </button>
           <button 
             @click="confirmarRespuesta"
-            :disabled="loadingRespuesta || !respuestaSeleccionada"
-            class="btn-primario"
+            :disabled="loadingRespuesta || !respuestaSeleccionada || (respuestaSeleccionada === 'rechazar' && !motivoRechazo)"
+            :class="['btn-primario', respuestaSeleccionada === 'aceptar' ? 'btn-success' : 'btn-danger']"
           >
             <i :class="loadingRespuesta ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>
-            <span>{{ loadingRespuesta ? 'Enviando...' : 'Enviar Respuesta' }}</span>
+            <span>{{ loadingRespuesta ? 'Enviando...' : 'Confirmar Decisión' }}</span>
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Modal Imagen Ampliada -->
+    <div v-if="imagenAmpliada" class="modal-imagen" @click="imagenAmpliada = null">
+      <img :src="imagenAmpliada" alt="Comprobante ampliado" />
+      <button class="btn-cerrar-imagen">
+        <i class="pi pi-times"></i>
+      </button>
     </div>
   </div>
 </template>
@@ -197,6 +238,7 @@ const ventaResponder = ref(null)
 const respuestaSeleccionada = ref('')
 const motivoRechazo = ref('')
 const loadingRespuesta = ref(false)
+const imagenAmpliada = ref(null)
 
 // Query para obtener notificaciones
 const MIS_NOTIFICACIONES = gql`
@@ -213,8 +255,19 @@ const MIS_NOTIFICACIONES = gql`
         total
         comprobante
         usuario {
+          id
           nombre
           apellidos
+          email
+        }
+        detalles {
+          cantidad
+          precioUnitario
+          tiendaProducto {
+            producto {
+              nombre
+            }
+          }
         }
       }
     }
@@ -378,10 +431,16 @@ const verDetalle = async (notif) => {
   }
 }
 
-const responderVenta = (notif) => {
+const abrirModalResponder = (notif) => {
   if (notif.ventaRelacionada) {
     ventaResponder.value = notif.ventaRelacionada
+    respuestaSeleccionada.value = ''
+    motivoRechazo.value = ''
   }
+}
+
+const ampliarImagen = (url) => {
+  imagenAmpliada.value = url
 }
 
 const confirmarRespuesta = async () => {
@@ -389,7 +448,7 @@ const confirmarRespuesta = async () => {
 
   const aceptar = respuestaSeleccionada.value === 'aceptar'
 
-  if (!aceptar && !motivoRechazo.value) {
+  if (!aceptar && !motivoRechazo.value.trim()) {
     alert('Debes proporcionar un motivo de rechazo')
     return
   }
@@ -519,6 +578,7 @@ const cerrarModal = () => {
 .loading i {
   font-size: 3rem;
   margin-bottom: 15px;
+  display: block;
 }
 
 /* Lista de notificaciones */
@@ -698,6 +758,7 @@ const cerrarModal = () => {
   font-size: 5rem;
   color: var(--cafe-claro);
   margin-bottom: 20px;
+  display: block;
 }
 
 .sin-notificaciones h3 {
@@ -706,13 +767,13 @@ const cerrarModal = () => {
 }
 
 /* Modal */
-.modal {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -722,11 +783,12 @@ const cerrarModal = () => {
 
 .modal-contenido {
   background: white;
-  border-radius: 15px;
-  max-width: 600px;
+  border-radius: 20px;
+  max-width: 650px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
@@ -735,70 +797,135 @@ const cerrarModal = () => {
   align-items: center;
   padding: 20px 25px;
   border-bottom: 2px solid var(--crema);
+  background: linear-gradient(135deg, var(--cafe), var(--naranja-opaco));
+  border-radius: 20px 20px 0 0;
 }
 
 .modal-header h2 {
-  color: var(--cafe);
+  color: white;
   margin: 0;
 }
 
 .btn-cerrar {
-  background: none;
+  background: rgba(255,255,255,0.2);
   border: none;
-  font-size: 1.5rem;
-  color: var(--gris-claro);
+  font-size: 1.3rem;
+  color: white;
   cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .btn-cerrar:hover {
-  color: var(--cafe);
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
 }
 
 .modal-body {
   padding: 25px;
 }
 
-.venta-info {
+.venta-info, .comprobante-section, .opciones-section {
+  margin-bottom: 25px;
+}
+
+.venta-info h3, .comprobante-section h3, .opciones-section h3 {
+  color: var(--cafe);
+  margin: 0 0 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+}
+
+.venta-info h3 i, .comprobante-section h3 i, .opciones-section h3 i {
+  color: var(--naranja-opaco);
+}
+
+.info-grid {
   background: var(--crema);
   padding: 15px;
   border-radius: 10px;
-  margin-bottom: 20px;
 }
 
-.venta-info h3 {
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--cafe-claro);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item .label {
+  color: var(--gris-claro);
+  font-weight: 500;
+}
+
+.info-item .value {
   color: var(--cafe);
-  margin: 0 0 10px 0;
+  font-weight: 600;
 }
 
-.venta-info p {
-  margin: 5px 0;
-  color: var(--gris-oscuro);
+.info-item.total .value.precio {
+  font-size: 1.3rem;
+  color: var(--naranja-opaco);
 }
 
-.comprobante-section {
-  margin-bottom: 20px;
-}
-
-.comprobante-section h3 {
-  color: var(--cafe);
-  margin: 0 0 15px 0;
+.comprobante-container {
+  text-align: center;
 }
 
 .comprobante-img {
-  width: 100%;
-  max-height: 400px;
-  object-fit: contain;
+  max-width: 100%;
+  max-height: 350px;
   border-radius: 10px;
   border: 2px solid var(--cafe-claro);
+  cursor: zoom-in;
+  transition: all 0.3s ease;
+}
+
+.comprobante-img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.comprobante-tip {
+  color: var(--gris-claro);
+  font-size: 0.85rem;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.sin-comprobante {
+  text-align: center;
+  padding: 30px;
+  background: #fff3cd;
+  border-radius: 10px;
+  color: #856404;
+}
+
+.sin-comprobante i {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  display: block;
 }
 
 .opciones-respuesta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
-  margin-top: 10px;
 }
-
 .btn-opcion {
   display: flex;
   flex-direction: column;

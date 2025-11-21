@@ -41,12 +41,12 @@
           <span>{{ producto.producto.categoria.nombre }}</span>
         </div>
 
-        <div class="stock">
+        <!-- <div class="stock">
           <i class="pi pi-box"></i>
           <span :class="producto.stock > 0 ? 'en-stock' : 'sin-stock'">
             {{ producto.stock > 0 ? `${producto.stock} disponibles` : 'Agotado' }}
           </span>
-        </div>
+        </div> -->
       </div>
 
       <!-- Galería de imágenes miniatura -->
@@ -74,7 +74,6 @@
       <button 
         @click="$emit('ver-detalle', producto)"
         class="btn-accion btn-ver-mas"
-        :disabled="producto.stock === 0"
       >
         <i class="pi pi-eye"></i>
         <span>Ver más</span>
@@ -83,10 +82,9 @@
       <button 
         @click="$emit('comprar', producto)"
         class="btn-accion btn-comprar"
-        :disabled="producto.stock === 0"
       >
         <i class="pi pi-shopping-cart"></i>
-        <span>{{ producto.stock > 0 ? 'Comprar' : 'Agotado' }}</span>
+        <span>{{ producto.stock >=  0 ? 'Comprar' : 'Agotado' }}</span>
       </button>
     </div>
   </div>

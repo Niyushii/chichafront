@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '../services/authService'
 
@@ -104,36 +104,58 @@ const loading = ref(false)
 const error = ref('')
 const success = ref('')
 
+// Redirigir automáticamente si ya hay token guardado
+onMounted(() => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  if (token) {
+    router.push('/') // O al dashboard según tu lógica
+  }
+})
+
 const handleLogin = async () => {
   loading.value = true
   error.value = ''
   success.value = ''
 
-  const result = await authService.login(email.value, password.value)
-  loading.value = false
+  try {
+    const result = await authService.login(email.value, password.value)
+    loading.value = false
 
-  if (result.success) {
-    success.value = result.data.mensaje
-    
-    if (recordarSesion.value) {
-      localStorage.setItem('recordarSesion', 'true')
-    } else {
-      localStorage.removeItem('recordarSesion')
-    }
-    
-    const userType = result.data.userType
-    
-    setTimeout(() => {
+    // Detecta loginData según la estructura real de la respuesta
+    const loginData = result?.data?.login || result?.login
+
+    if (loginData) {
+      success.value = loginData.mensaje
+
+      // Guardar token según checkbox
+      if (recordarSesion.value) {
+        localStorage.setItem('token', loginData.token)
+        sessionStorage.removeItem('token')
+      } else {
+        sessionStorage.setItem('token', loginData.token)
+        localStorage.removeItem('token')
+      }
+
+      // Esperar a que Vue procese cambios
+      await nextTick()
+
+      // Redirigir según tipo de usuario
+      const userType = loginData.userType
       if (userType === 'superadmin') {
         router.push('/admin/dashboard')
       } else if (userType === 'moderador') {
         router.push('/moderador/dashboard')
       } else {
-        router.push('/')
+        router.push('/') // Redirige al home
       }
-    }, 1000)
-  } else {
-    error.value = result.error
+    } else {
+      error.value = 'Error en la respuesta del servidor'
+      console.error('Respuesta inesperada:', result)
+    }
+  } catch (err) {
+    loading.value = false
+    error.value = 'Error al iniciar sesión: ' + (err.message || err)
+    console.error(err)
   }
 }
 </script>
@@ -149,7 +171,6 @@ const handleLogin = async () => {
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
-
 }
 
 .login-container::before {

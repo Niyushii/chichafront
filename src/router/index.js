@@ -19,6 +19,8 @@ import ComoFuncionaView from '../pages/ComoFuncionaView.vue'
 import CategoriasView from '../pages/CategoriasView.vue'
 import ComprarProductoView from '../pages/ComprarProductoView.vue'
 import NotificacionesView from '../pages/NotificacionesView.vue'
+import Busqueda from '../pages/Busqueda.vue'
+
 const routes = [
   // Login y Registro (sin autenticación)
   {
@@ -53,7 +55,7 @@ const routes = [
     path: '/',
     name: 'Home',
     component: HomeView,
-    meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+    meta: { requiresAuth: true, allowedRoles: false}
   },
   
   // Dashboard SuperAdmin
@@ -139,8 +141,14 @@ const routes = [
     name: 'Notificaciones',
     component: NotificacionesView,
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
-  }
+  },
 
+  {
+    path: '/busqueda',
+    name: 'Busqueda',
+    component: () => import('../pages/Busqueda.vue'),
+    meta: { requiresAuth: false }
+  }
 ]
 
 const router = createRouter({

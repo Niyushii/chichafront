@@ -132,3 +132,20 @@ export const ACTUALIZAR_STOCK_PRECIO = gql`
     }
   }
 `;
+
+export const GET_PRODUCTOS_POR_CATEGORIA = gql`
+  query ProductosPorCategoria($categoriaId: ID!) {
+    productosPorCategoria(categoriaId: $categoriaId) {
+      id
+      precio
+      descripcion
+      imagenes { archivo }
+      talla { id nombre }
+      producto {
+        id
+        nombre
+        categoria { id nombre }
+      }
+    }
+  }
+`;

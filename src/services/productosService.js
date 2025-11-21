@@ -8,7 +8,8 @@ import {
   ELIMINAR_PRODUCTO,
   SUBIR_IMAGEN_PRODUCTO,
   ELIMINAR_IMAGEN_PRODUCTO,
-  ACTUALIZAR_STOCK_PRECIO
+  ACTUALIZAR_STOCK_PRECIO,
+  GET_PRODUCTOS_POR_CATEGORIA
 } from '../graphql/productos'
 
 export const productosService = {
@@ -125,5 +126,12 @@ export const productosService = {
       return error.graphQLErrors[0].message
     }
     return error.message || 'Error desconocido'
-  }
-}
+  }, 
+  async obtenerPorCategoria(categoriaId) {
+    const { data } = await client.query({
+      query: GET_PRODUCTOS_POR_CATEGORIA,
+      variables: { categoriaId },
+      fetchPolicy: "no-cache"
+    })
+    return data.productosPorCategoria || []
+}};

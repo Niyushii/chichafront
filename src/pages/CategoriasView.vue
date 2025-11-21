@@ -164,7 +164,7 @@
               <img 
                 v-if="producto.imagenes && producto.imagenes.length > 0" 
                 :src="producto.imagenes[0].archivo" 
-                :alt="producto.producto.nombre"
+                :alt="producto.producto?.nombre || 'Producto'"
               />
               <div v-else class="imagen-placeholder">
                 <i class="pi pi-image"></i>
@@ -252,29 +252,25 @@ const cargarDatos = async () => {
 
 const cargarProductos = async () => {
   try {
-    // Obtener IDs de la categoría padre y todas sus subcategorías
-    const categoriasIds = [categoriaId, ...subcategorias.value.map(s => s.id)]
-    
-    // Cargar productos de todas las categorías
+    const categoriasIds = [categoriaId, ...subcategorias.value.map(s => s.id)];
+
     const promesas = categoriasIds.map(async (catId) => {
       try {
-        // Aquí necesitarías un método para obtener productos por categoría
-        // Por ahora usamos un enfoque alternativo
-        return []
+        return await productosService.obtenerPorCategoria(catId);
       } catch (err) {
-        console.error(`Error al cargar productos de categoría ${catId}:`, err)
-        return []
+        console.error("Error al cargar productos de categoría " + catId, err);
+        return [];
       }
-    })
-    
-    const resultados = await Promise.all(promesas)
-    productosOriginales.value = resultados.flat()
-    
+    });
+
+    const resultados = await Promise.all(promesas);
+    productosOriginales.value = resultados.flat();
   } catch (err) {
-    console.error('Error al cargar productos:', err)
-    throw err
+    console.error("Error al cargar productos:", err);
+    throw err;
   }
-}
+};
+
 
 const productosFiltrados = computed(() => {
   let productos = [...productosOriginales.value]

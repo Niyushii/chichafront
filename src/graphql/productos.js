@@ -1,7 +1,8 @@
 import { gql } from "@apollo/client";
 
-// Queries
-// Obtener productos de una tienda
+// ===================== QUERIES =====================
+
+// Obtener productos de una tienda (TiendaProductoType)
 export const GET_PRODUCTOS_TIENDA = gql`
   query GetProductosTienda($tiendaId: ID!) {
     productosDeTienda(tiendaId: $tiendaId) {
@@ -30,37 +31,28 @@ export const GET_PRODUCTOS_TIENDA = gql`
   }
 `;
 
-// Obtener un producto por ID
+// Obtener un producto por ID (TiendaProductoType)
 export const GET_PRODUCTO = gql`
   query GetProducto($id: ID!) {
-    tiendaProducto(id: $id) {
+    productoPorId(id: $id) {
       id
-      precio
-      stock
+      nombre
       descripcion
-      talla {
+      categoria {
         id
         nombre
-      }
-      producto {
-        id
-        nombre
-        descripcion
-        categoria { id nombre }
-      }
-      imagenes {
-        id
-        archivo
       }
     }
   }
 `;
 
-// Mutations
+
+// ===================== MUTATIONS =====================
+
 // Eliminar producto
 export const ELIMINAR_PRODUCTO = gql`
-  mutation EliminarProducto($id: ID!) {
-    eliminarProducto(tiendaProductoId: $id) {
+  mutation EliminarProducto($tiendaProductoId: ID!) {
+    eliminarProducto(tiendaProductoId: $tiendaProductoId) {
       mensaje
     }
   }
@@ -68,13 +60,12 @@ export const ELIMINAR_PRODUCTO = gql`
 
 // Eliminar imagen
 export const ELIMINAR_IMAGEN_PRODUCTO = gql`
-  mutation EliminarImagenProducto($id: ID!) {
-    eliminarImagenProducto(imagenId: $id) {
+  mutation EliminarImagenProducto($imagenId: ID!) {
+    eliminarImagenProducto(imagenId: $imagenId) {
       mensaje
     }
   }
 `;
-
 
 // Crear producto
 export const CREAR_PRODUCTO = gql`
@@ -101,6 +92,11 @@ export const EDITAR_PRODUCTO = gql`
         id
         precio
         stock
+        descripcion
+        producto {
+          id
+          nombre
+        }
       }
     }
   }
@@ -108,8 +104,8 @@ export const EDITAR_PRODUCTO = gql`
 
 // Subir imagen
 export const SUBIR_IMAGEN_PRODUCTO = gql`
-  mutation SubirImagenProducto($id: ID!, $imagen: Upload!) {
-    subirImagenProducto(tiendaProductoId: $id, imagen: $imagen) {
+  mutation SubirImagenProducto($tiendaProductoId: ID!, $imagen: Upload!) {
+    subirImagenProducto(tiendaProductoId: $tiendaProductoId, imagen: $imagen) {
       mensaje
       imagenObj {
         id
@@ -121,9 +117,9 @@ export const SUBIR_IMAGEN_PRODUCTO = gql`
 
 // Actualizar stock y precio
 export const ACTUALIZAR_STOCK_PRECIO = gql`
-  mutation ActualizarStockPrecio($id: ID!, $precio: Float, $stock: Int) {
+  mutation ActualizarStockPrecio($tiendaProductoId: ID!, $precio: Float, $stock: Int) {
     actualizarStockPrecio(
-      tiendaProductoId: $id
+      tiendaProductoId: $tiendaProductoId
       precio: $precio
       stock: $stock
     ) {

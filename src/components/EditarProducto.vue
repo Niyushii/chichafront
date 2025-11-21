@@ -159,27 +159,34 @@ async function cargarDatos() {
     // Datos del producto
     const p = await productosService.obtenerProducto(productoId)
 
+    // ⚡ Ajuste: usar p directamente
     formulario.value = {
       nombre: p.nombre,
-      descripcion: p.descripcion,
-      precio: p.precio,
+      descripcion: p.descripcion || '',
+      precio: 0,       // default temporal, ya que no viene en la query
       categoria_id: p.categoria.id,
-      talla_id: p.talla ? p.talla.id : ''
+      talla_id: ''     // default temporal
     }
 
-    categoriaPadreSeleccionada.value = p.categoria.padreId || p.categoria.id
+    // Determinar categoría padre
+    if (p.categoria.padreId) {
+      categoriaPadreSeleccionada.value = p.categoria.padreId
+    } else {
+      categoriaPadreSeleccionada.value = p.categoria.id
+    }
 
-    imagenesExistentes.value = p.imagenes.map(img => ({
-      id: img.id,
-      url: img.url
-    }))
+    // ⚡ Imágenes inexistentes en esta query, dejar vacío
+    imagenesExistentes.value = []
 
-    // Subcategorías
-    const subs = await categoriasService.obtenerSubcategorias(categoriaPadreSeleccionada.value)
-    subcategorias.value = subs
+    // Cargar subcategorías si hay categoría padre
+    if (categoriaPadreSeleccionada.value) {
+      const subs = await categoriasService.obtenerSubcategorias(categoriaPadreSeleccionada.value)
+      subcategorias.value = subs || []
+    }
 
   } catch (err) {
     error.value = 'Error cargando producto: ' + err.message
+    console.error('Error completo:', err)
   }
 }
 
@@ -201,17 +208,16 @@ function eliminarImagen(i) {
 async function actualizarProducto() {
   try {
     const input = {
-      productoId,
+      tiendaProductoId: productoId,          // camelCase
       nombre: formulario.value.nombre,
       descripcion: formulario.value.descripcion,
-      precio: formulario.value.precio,
       categoriaId: formulario.value.categoria_id,
       tallaId: formulario.value.talla_id || null,
-      nuevasImagenes: imagenesArchivos.value.length ? imagenesArchivos.value : null
+      precio: parseFloat(formulario.value.precio),  // ⚡ Esto es clave
+      stock: Number(formulario.value.stock) || 0
     }
 
-    const res = await productosService.actualizar(input)
-
+    const res = await productosService.editar(input)
     success.value = res.mensaje || 'Producto actualizado ✨'
 
     setTimeout(() => {
@@ -220,8 +226,10 @@ async function actualizarProducto() {
 
   } catch (err) {
     error.value = err.message
+    console.error('Error al actualizar:', err)
   }
 }
+
 
 function volver() {
   router.push(`/tienda/${tiendaId}`)

@@ -295,11 +295,11 @@ const crearProducto = async () => {
 
   try {
     const input = {
-      tiendaId: tiendaId,  // ✅ camelCase
+      tiendaId: tiendaId,
       nombre: formulario.value.nombre,
       descripcion: formulario.value.descripcion,
       precio: parseFloat(formulario.value.precio),
-      stock: 0,  // ✅ Siempre 0
+      stock: 0,
       categoriaId: formulario.value.categoria_id || categoriaPadreSeleccionada.value,  // ✅ camelCase
       imagenes: imagenesArchivos.value.length > 0 ? imagenesArchivos.value : undefined
     }

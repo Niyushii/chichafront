@@ -33,7 +33,7 @@ export const productosService = {
         variables: { id },
         fetchPolicy: 'network-only'
       })
-      return data.tiendaProducto
+      return data.productoPorId  // ⚡ aquí va el campo correcto de tu query
     } catch (error) {
       console.error('Error al obtener producto:', error)
       throw new Error(this.getErrorMessage(error))

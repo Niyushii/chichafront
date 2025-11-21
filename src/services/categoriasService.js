@@ -19,6 +19,7 @@ class categoriasService {
     try {
       const { data } = await apolloClient.query({
         query: TODAS_CATEGORIAS,
+        fetchPolicy: "no-cache",
         variables: { soloActivas, soloPrincipales }
       });
       return data.todasCategorias;
@@ -32,6 +33,7 @@ class categoriasService {
     try {
       const { data } = await apolloClient.query({
         query: CATEGORIA_POR_ID,
+        fetchPolicy: "no-cache",
         variables: { id }
       });
       return data.categoriaPorId;
@@ -44,7 +46,8 @@ class categoriasService {
   async obtenerJerarquia() {
     try {
       const { data } = await apolloClient.query({
-        query: CATEGORIAS_JERARQUIA
+        query: CATEGORIAS_JERARQUIA,
+        fetchPolicy: "no-cache",
       });
       return data.categoriasJerarquia;
     } catch (error) {
@@ -57,7 +60,8 @@ class categoriasService {
     try {
       const { data } = await apolloClient.query({
         query: SUBCATEGORIAS_DE,
-        variables: { categoriaId }
+        variables: { categoriaId },
+        fetchPolicy: "no-cache",
       });
       return data.subcategoriasDe;
     } catch (error) {
@@ -74,6 +78,7 @@ class categoriasService {
     try {
       const { data } = await apolloClient.query({
         query: BUSCAR_CATEGORIAS,
+        fetchPolicy: "no-cache",
         variables: { busqueda: busqueda.trim() }
       });
       return data.buscarCategorias;

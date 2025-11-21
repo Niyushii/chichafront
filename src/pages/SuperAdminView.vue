@@ -21,19 +21,13 @@
         <i class="pi pi-users"></i>
         <span>Moderadores</span>
       </button>
-      <button 
-        :class="['tab', { active: vistaActual === 'usuarios' }]"
-        @click="cambiarVista('usuarios')"
-      >
-        <i class="pi pi-user"></i>
-        <span>Usuarios</span>
-      </button>
+      
       <button 
         :class="['tab', { active: vistaActual === 'auditoria' }]"
         @click="cambiarVista('auditoria')"
       >
         <i class="pi pi-history"></i>
-        <span>Auditoría</span>
+        <span>Registros</span>
       </button>
     </div>
 
@@ -385,7 +379,7 @@
     <!-- Vista: Auditoría -->
     <div v-if="vistaActual === 'auditoria'">
       <div class="auditoria-header">
-        <h2><i class="pi pi-history"></i> Registro de Auditoría</h2>
+        <h2><i class="pi pi-history"></i> Registro de acciones</h2>
         <button @click="cargarAuditoria" class="btn-secundario" :disabled="loadingAudit">
           <i :class="['pi', loadingAudit ? 'pi-spin pi-spinner' : 'pi-refresh']"></i>
           <span>Actualizar</span>
@@ -395,7 +389,7 @@
       <!-- Loading -->
       <div v-if="loadingAudit && !auditorias.length" class="loading">
         <i class="pi pi-spin pi-spinner"></i>
-        <p>Cargando auditorías...</p>
+        <p>Cargando registros...</p>
       </div>
 
       <!-- Lista de Auditorías -->

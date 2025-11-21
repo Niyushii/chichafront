@@ -50,6 +50,13 @@
         <i class="pi pi-shopping-bag"></i>
         <span>Productos</span>
       </button>
+      <button 
+        :class="['tab', { active: vistaActual === 'auditoria' }]"
+        @click="cambiarVista('auditoria')"
+      >
+        <i class="pi pi-history"></i>
+        <span>Registro Usuarios</span>
+      </button>
     </div>
 
     <!-- Mensajes -->
@@ -112,6 +119,15 @@
 
       <!-- Controles -->
       <div class="controles">
+        <button 
+          @click="cargarDatosCategorias" 
+          :disabled="loading" 
+          class="btn-secundario btn-actualizar"
+          title="Actualizar Datos"
+        >
+          <i :class="['pi', 'pi-refresh', { 'pi-spin': loading }]"></i>
+          <span>Actualizar</span>
+      </button>
         <button 
           @click="toggleVistaJerarquia"
           class="btn-secundario"
@@ -633,7 +649,7 @@
               type="text"
               required
               class="input"
-              placeholder="Ej: Electrónica"
+              placeholder="Ej: Poleras"
             />
           </div>
           <div class="campo">
@@ -1094,6 +1110,14 @@ const cambiarVista = async (vista) => {
   }
 }
 // Funciones de Categorías
+const actualizarCategoriasVista = async () => {
+    await cargarCategorias() 
+    await cargarCategoriasPrincipales()
+    if (vistaJerarquia.value) {
+        await cargarJerarquia()
+    }
+}
+
 const cargarCategorias = async () => {
   loading.value = true
   try {
@@ -1161,6 +1185,7 @@ const crearCategoria = async () => {
     const result = await categoriasService.crearCategoria(input)
     mostrarExito(result.mensaje)
     cerrarModalCategoria()
+    busquedaCategorias.value = ''
     await cargarCategorias()
     await cargarCategoriasPrincipales()
     if (vistaJerarquia.value) await cargarJerarquia()
@@ -1225,6 +1250,7 @@ const cerrarModalCategoria = () => {
     categoriaPadreId: null
   }
 }
+
 
 // Funciones de Tallas
 const cargarTallas = async () => {

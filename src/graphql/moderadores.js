@@ -168,9 +168,18 @@ export const GET_AUDITORIA = gql`
     }
   }
 `
-
-// ========== MUTATIONS ==========
-
+export const GET_AUDITORIA_USUARIO = gql`
+  query ObtenerAuditoriaUsuarios {
+  auditoriaUsuarios {
+    id
+    usuarioId
+    usuarioEmail
+    accion
+    descripcion
+    fecha
+  }
+}
+`
 // Tallas
 export const CREAR_TALLA = gql`
   mutation CrearTalla($input: CrearTallaInput!) {

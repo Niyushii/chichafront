@@ -20,6 +20,7 @@ import {
   GET_TODOS_MODERADORES,
   GET_MODERADOR_BY_ID,
   GET_ESTADISTICAS_MODERADORES,
+  GET_AUDITORIA_USUARIO,
 } from '../graphql/moderadores'
 
 export const moderadoresService = {
@@ -413,12 +414,12 @@ export const moderadoresService = {
   async obtenerAuditoria() {
     try {
       const { data } = await client.query({
-        query: GET_AUDITORIA,
+        query: GET_AUDITORIA_USUARIO,
         fetchPolicy: 'network-only'
       })
       return {
         success: true,
-        data: data.auditoria
+        data: data // ✅ devolvemos todo 'data', que contiene 'auditoriaUsuarios'
       }
     } catch (error) {
       return {
@@ -427,6 +428,7 @@ export const moderadoresService = {
       }
     }
   },
+
 
   async editar(id, tiendaData, fotoPerfil = null, codigoQr = null) {
     try {

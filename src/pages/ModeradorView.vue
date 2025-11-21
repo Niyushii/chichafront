@@ -629,6 +629,57 @@
     </div>
 
     
+    <!-- ==================== VISTA: AUDITORÍA ==================== -->
+    <div v-if="vistaActual === 'auditoria'">
+      <div class="vista-header">
+        <h2><i class="pi pi-history"></i> Registro de Auditoría</h2>
+        <button 
+          @click="cargarAuditoria"
+          class="btn-secundario"
+          :disabled="loadingAuditoria"
+        >
+          <i :class="['pi', loadingAuditoria ? 'pi-spin pi-spinner' : 'pi-refresh']"></i>
+          <span>Actualizar</span>
+        </button>
+      </div>
+
+      <!-- Lista Auditoría -->
+      <div v-if="loadingAuditoria && !auditoriasUsuariosArray.length" class="loading">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Cargando auditorías...</p>
+      </div>
+
+      <div v-else class="auditoria-lista">
+        <div 
+          v-for="auditoria in auditoriasUsuariosArray" 
+          :key="auditoria.id"
+          class="auditoria-item"
+        >
+          <div class="auditoria-icon">
+            <i :class="getAuditoriaIcon(auditoria.accion)"></i>
+          </div>
+          <div class="auditoria-content">
+            <div class="auditoria-header-item">
+              <strong>{{ auditoria.accion }}</strong>
+              <span class="auditoria-fecha">{{ formatearFecha(auditoria.fecha) }}</span>
+            </div>
+            <p class="auditoria-descripcion">{{ auditoria.descripcion }}</p>
+            <div class="auditoria-meta">
+              <span class="badge-tipo">{{ auditoria.usuarioTipo }}</span>
+              <span v-if="auditoria.usuarioEmail" class="auditoria-email">
+                {{ auditoria.usuarioEmail }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <p v-if="!loadingAuditoria && auditoriasUsuariosArray.length === 0" class="sin-datos">
+
+          No hay registros de auditoría
+        </p>
+      </div>
+    </div>
+
     <!-- ==================== MODALES ==================== -->
 
     <!-- Modal Crear Categoría -->
@@ -1032,7 +1083,8 @@ const productos = ref([])
 const busquedaProductos = ref('')
 
 // Auditoría
-const auditorias = ref([])
+const auditorias_usuarios = ref([])
+const auditoriasUsuariosArray = computed(() => auditorias_usuarios.value || [])
 
 // Computed
 const estadisticasCategorias = computed(() => {
@@ -1105,7 +1157,7 @@ const cambiarVista = async (vista) => {
     await cargarTiendas()
   } else if (vista === 'productos' && productos.value.length === 0) {
     await cargarProductos()
-  } else if (vista === 'auditoria' && auditorias.value.length === 0) {
+  } else if (vista === 'auditoria' && auditorias_usuarios.value.length === 0) {
     await cargarAuditoria()
   }
 }
@@ -1442,8 +1494,6 @@ const guardarEdicionTienda = async () => {
     formEditarTienda.value.codigoQr
   )
   if (response.success) {
-    // asumiendo que tienes toast o algo
-    // this.$toast.success("Tienda actualizada correctamente")
     modalEditarTienda.value = false
     cargarTiendas()
   } else {
@@ -1487,15 +1537,27 @@ const confirmarEliminarProducto = async (variante) => {
 // Funciones de Auditoría
 const cargarAuditoria = async () => {
   loadingAuditoria.value = true
-  const result = await moderadoresService.obtenerAuditoria()
-  loadingAuditoria.value = false
-
-  if (result.success) {
-    auditorias.value = result.data
-  } else {
-    mostrarError(result.error)
+  try {
+    const result = await moderadoresService.obtenerAuditoria()
+    if (result.success) {
+      // ⚠️ proteger que sea array
+      auditorias_usuarios.value = Array.isArray(result.data.auditoriaUsuarios)
+        ? result.data.auditoriaUsuarios
+        : []
+    } else {
+      mostrarError(result.error)
+      auditorias_usuarios.value = []
+    }
+  } catch (e) {
+    console.error('Error cargando auditoría', e)
+    mostrarError('Error cargando auditoría')
+    auditorias_usuarios.value = []
+  } finally {
+    loadingAuditoria.value = false
   }
 }
+
+
 
 const getAuditoriaIcon = (accion) => {
   const iconos = {

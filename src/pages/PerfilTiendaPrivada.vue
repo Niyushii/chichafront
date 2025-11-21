@@ -95,9 +95,9 @@
           <div class="productos-empty">
             <i class="pi pi-shopping-bag"></i>
             <p>Aún no tienes productos en esta tienda</p>
-            <button class="btn-agregar">
-              <i class="pi pi-plus"></i>
-              <span>Agregar Producto</span>
+            <button @click="router.push(`/tienda/${tienda.id}/producto/crear`)" class="btn-agregar">
+            <i class="pi pi-plus"></i>
+            <span>Agregar Producto</span>
             </button>
           </div>
         </div>

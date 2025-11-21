@@ -10,7 +10,7 @@ import ModeradorView from '../pages/ModeradorView.vue'
 import SuperAdminView from '../pages/SuperAdminView.vue'
 import TiendasView from '../pages/TiendasView.vue'  // ✅ Lista de tiendas
 import PerfilTiendaPrivada from '../pages/PerfilTiendaPrivada.vue'
-// import TiendaPerfilView from '../pages/TiendaPerfil.vue'  // ✅ Perfil individual (por crear)
+import CrearProducto from '../components/CrearProducto.vue'
 
 const routes = [
   // Login y Registro (sin autenticación)
@@ -63,6 +63,13 @@ const routes = [
     path: '/tienda/:id',
     name: 'TiendaPerfilPrivada',
     component: PerfilTiendaPrivada,
+    meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  },
+
+  {
+    path: '/tienda/:id/producto/crear',
+    name: 'CrearProducto',
+    component: CrearProducto,
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
   }
 ]

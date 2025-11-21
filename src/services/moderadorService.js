@@ -1,4 +1,4 @@
-// src/services/moderadoresService.js
+// src/services/moderadorService.js
 import client from '../apollo/apolloClient'
 import {
     GET_TODOS_MODERADORES,
@@ -8,140 +8,185 @@ import {
     EDITAR_MODERADOR,
     ELIMINAR_MODERADOR
 } from '../graphql/moderadores'
+import { gql } from '@apollo/client/core'
+
+// Mutation adicional para cambiar estado
+const CAMBIAR_ESTADO_MODERADOR = gql`
+  mutation CambiarEstadoModerador($moderadorId: ID!, $nuevoEstado: String!) {
+    cambiarEstadoModerador(moderadorId: $moderadorId, nuevoEstado: $nuevoEstado) {
+      moderador {
+        id
+        estado {
+          id
+          nombre
+        }
+      }
+      mensaje
+    }
+  }
+`
 
 export const moderadoresService = {
-    async obtenerTodos(soloActivos = true) {
+    async obtenerTodos(soloActivos = false) {
         try {
-        const { data } = await client.query({
-            query: GET_TODOS_MODERADORES,
-            variables: { soloActivos },
-            fetchPolicy: 'network-only'
-        })
+            const { data } = await client.query({
+                query: GET_TODOS_MODERADORES,
+                fetchPolicy: 'network-only'
+            })
 
-        return {
-            success: true,
-            data: data.todosModeradores
-        }
+            // Filtrar en el frontend si es necesario
+            let moderadores = data.todosModeradores || []
+            
+            if (soloActivos) {
+                moderadores = moderadores.filter(m => 
+                    m.estado.nombre.toLowerCase() === 'activo'
+                )
+            }
+
+            return {
+                success: true,
+                data: moderadores
+            }
         } catch (error) {
-        console.error('Error al obtener moderadores:', error)
-        return {
-            success: false,
-            error: this.getErrorMessage(error)
-        }
+            console.error('Error al obtener moderadores:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
     },
 
     async obtenerPorId(id) {
         try {
-        const { data } = await client.query({
-            query: GET_MODERADOR_BY_ID,
-            variables: { id },
-            fetchPolicy: 'network-only'
-        })
+            const { data } = await client.query({
+                query: GET_MODERADOR_BY_ID,
+                variables: { id },
+                fetchPolicy: 'network-only'
+            })
 
-        return {
-            success: true,
-            data: data.moderadorPorId
-        }
+            return {
+                success: true,
+                data: data.moderadorPorId
+            }
         } catch (error) {
-        console.error('Error al obtener moderador:', error)
-        return {
-            success: false,
-            error: this.getErrorMessage(error)
-        }
+            console.error('Error al obtener moderador:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
     },
 
     async obtenerEstadisticas() {
         try {
-        const { data } = await client.query({
-            query: GET_ESTADISTICAS_MODERADORES,
-            fetchPolicy: 'network-only'
-        })
+            const { data } = await client.query({
+                query: GET_ESTADISTICAS_MODERADORES,
+                fetchPolicy: 'network-only'
+            })
 
-        return {
-            success: true,
-            data: data.estadisticasModeradores
-        }
+            return {
+                success: true,
+                data: data.estadisticasModeradores
+            }
         } catch (error) {
-        console.error('Error al obtener estadísticas:', error)
-        return {
-            success: false,
-            error: this.getErrorMessage(error)
-        }
+            console.error('Error al obtener estadísticas:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
     },
 
     async crear(moderadorData) {
         try {
-        const { data } = await client.mutate({
-            mutation: CREAR_MODERADOR,
-            variables: {
-            input: moderadorData
-            }
-        })
+            const { data } = await client.mutate({
+                mutation: CREAR_MODERADOR,
+                variables: {
+                    input: moderadorData
+                }
+            })
 
-        return {
-            success: true,
-            data: data.crearModerador
-        }
+            return {
+                success: true,
+                data: data.crearModerador
+            }
         } catch (error) {
-        console.error('Error al crear moderador:', error)
-        return {
-            success: false,
-            error: this.getErrorMessage(error)
-        }
+            console.error('Error al crear moderador:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
     },
 
     async editar(id, moderadorData) {
         try {
-        const { data } = await client.mutate({
-            mutation: EDITAR_MODERADOR,
-            variables: {
-            id,
-            input: moderadorData
-            }
-        })
+            const { data } = await client.mutate({
+                mutation: EDITAR_MODERADOR,
+                variables: {
+                    id,
+                    input: moderadorData
+                }
+            })
 
-        return {
-            success: true,
-            data: data.editarModerador
-        }
+            return {
+                success: true,
+                data: data.editarModerador
+            }
         } catch (error) {
-        console.error('Error al editar moderador:', error)
-        return {
-            success: false,
-            error: this.getErrorMessage(error)
-        }
+            console.error('Error al editar moderador:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
     },
 
     async eliminar(id) {
         try {
-        const { data } = await client.mutate({
-            mutation: ELIMINAR_MODERADOR,
-            variables: { id }
-        })
+            const { data } = await client.mutate({
+                mutation: ELIMINAR_MODERADOR,
+                variables: { id }
+            })
 
-        return {
-            success: true,
-            data: data.eliminarModerador
-        }
+            return {
+                success: true,
+                data: data.eliminarModerador
+            }
         } catch (error) {
-        console.error('Error al eliminar moderador:', error)
-        return {
-            success: false,
-            error: this.getErrorMessage(error)
+            console.error('Error al eliminar moderador:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
+    },
+
+    async cambiarEstado(moderadorId, nuevoEstado) {
+        try {
+            const { data } = await client.mutate({
+                mutation: CAMBIAR_ESTADO_MODERADOR,
+                variables: { moderadorId, nuevoEstado }
+            })
+
+            return {
+                success: true,
+                data: data.cambiarEstadoModerador
+            }
+        } catch (error) {
+            console.error('Error al cambiar estado:', error)
+            return {
+                success: false,
+                error: this.getErrorMessage(error)
+            }
         }
     },
 
     getErrorMessage(error) {
         if (error.networkError) {
-        return `Error de red: ${error.networkError.message}`
+            return `Error de red: ${error.networkError.message}`
         } else if (error.graphQLErrors && error.graphQLErrors.length > 0) {
-        return error.graphQLErrors[0].message
+            return error.graphQLErrors[0].message
         }
         return error.message || 'Error desconocido'
     }

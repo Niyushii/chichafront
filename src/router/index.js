@@ -16,6 +16,7 @@ import CrearProducto from '../components/CrearProducto.vue'
 import EditarProducto from '../components/EditarProducto.vue'
 import AboutView from '../pages/AboutView.vue'
 import ComoFuncionaView from '../pages/ComoFuncionaView.vue'
+import CategoriasView from '../pages/CategoriasView.vue'
 
 const routes = [
   // Login y Registro (sin autenticación)
@@ -116,6 +117,14 @@ const routes = [
     name: 'EditarProducto',
     component: EditarProducto,
     meta: { requiresAuth: true, allowedRoles: ['usuario'] }
+  },
+
+  //Categorias
+  {
+    path: '/categorias/:categoriaId',
+    name: 'Categorias',
+    component: CategoriasView,
+    meta: { requiresAuth: false }
   }
 ]
 

@@ -70,7 +70,7 @@
           <router-link 
             v-for="categoria in categorias" 
             :key="categoria.id"
-            :to="`/categoria/${categoria.id}`"
+            :to="`/categorias/${categoria.id}`"
             class="category-link"
           >
             <span>{{ categoria.icono }}</span>

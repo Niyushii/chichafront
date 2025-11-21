@@ -9,7 +9,8 @@ import {
   SUBIR_IMAGEN_PRODUCTO,
   ELIMINAR_IMAGEN_PRODUCTO,
   ACTUALIZAR_STOCK_PRECIO,
-  GET_PRODUCTOS_POR_CATEGORIA
+  GET_PRODUCTOS_POR_CATEGORIA,
+  PRODUCTOS_POR_CATEGORIA,
 } from '../graphql/productos'
 
 export const productosService = {
@@ -127,11 +128,30 @@ export const productosService = {
     }
     return error.message || 'Error desconocido'
   }, 
-  async obtenerPorCategoria(categoriaId) {
-    const { data } = await client.query({
-      query: GET_PRODUCTOS_POR_CATEGORIA,
-      variables: { categoriaId },
-      fetchPolicy: "no-cache"
-    })
-    return data.productosPorCategoria || []
-}};
+  
+  // async obtenerPorCategoria(categoriaId) {
+  //   try {
+  //     const { data } = await client.query({
+  //       query: GET_PRODUCTOS_POR_CATEGORIA,
+  //       variables: { categoriaId },
+  //       fetchPolicy: "no-cache"
+  //     })
+      
+  //     console.log('🔍 Respuesta de la query productosPorCategoria:', data);
+      
+  //     return data.productosPorCategoria || []
+  //   } catch (error) {
+  //     console.error('❌ Error en obtenerPorCategoria:', error)
+  //     throw new Error(this.getErrorMessage(error))
+  //   }
+  // }
+
+    async obtenerPorCategoria(categoriaId) {
+      const { data } = await client.query({
+        query: PRODUCTOS_POR_CATEGORIA,
+        variables: { categoriaId },
+        fetchPolicy: "no-cache"
+      })
+      return data.productosPorCategoria
+    }
+  }

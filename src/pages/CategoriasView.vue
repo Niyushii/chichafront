@@ -41,11 +41,12 @@
               <label class="opcion-filtro">
                 <input 
                   type="radio" 
+                  name="subcategoria"
                   :value="null" 
                   v-model="filtros.subcategoriaId"
                   @change="aplicarFiltros"
                 />
-                <span>Todas</span>
+                <span>Todas ({{ productosOriginales.length }})</span>
               </label>
               <label 
                 v-for="sub in subcategorias" 
@@ -54,11 +55,12 @@
               >
                 <input 
                   type="radio" 
+                  name="subcategoria"
                   :value="sub.id" 
                   v-model="filtros.subcategoriaId"
                   @change="aplicarFiltros"
                 />
-                <span>{{ sub.nombre }}</span>
+                <span>{{ sub.nombre }} ({{ contarProductosPorCategoria(sub.id) }})</span>
               </label>
             </div>
           </div>
@@ -137,59 +139,30 @@
         </div>
       </aside>
 
-      <!-- Grid de productos -->
-      <main class="productos-grid">
+      <main class="productos-section">
+        <!-- Header -->
         <div class="productos-header">
-          <p class="contador-productos">
+            <p class="contador-productos">
             {{ productosFiltrados.length }} producto{{ productosFiltrados.length !== 1 ? 's' : '' }} encontrado{{ productosFiltrados.length !== 1 ? 's' : '' }}
-          </p>
+            </p>
         </div>
 
         <!-- Sin productos -->
         <div v-if="productosFiltrados.length === 0" class="sin-productos">
-          <i class="pi pi-inbox"></i>
-          <h3>No hay productos disponibles</h3>
-          <p>{{ hayFiltrosActivos ? 'Intenta ajustar los filtros' : 'Aún no hay productos en esta categoría' }}</p>
+            <i class="pi pi-inbox"></i>
+            <h3>No hay productos disponibles</h3>
+            <p>{{ hayFiltrosActivos ? 'Intenta ajustar los filtros' : 'Aún no hay productos en esta categoría' }}</p>
         </div>
 
-        <!-- Tarjetas de productos -->
-        <div v-else class="productos-lista">
-          <div 
-            v-for="producto in productosFiltrados" 
+        <!-- Grid de productos -->
+        <div v-else class="productos-grid">
+            <TarjetaProductoPublica 
+            v-for="producto in productosFiltrados"
             :key="producto.id"
-            class="producto-card"
-            @click="verProducto(producto)"
-          >
-            <div class="producto-imagen">
-              <img 
-                v-if="producto.imagenes && producto.imagenes.length > 0" 
-                :src="producto.imagenes[0].archivo" 
-                :alt="producto.producto?.nombre || 'Producto'"
-              />
-              <div v-else class="imagen-placeholder">
-                <i class="pi pi-image"></i>
-              </div>
-              
-              <div v-if="producto.talla" class="badge-talla">
-                {{ producto.talla.nombre }}
-              </div>
-            </div>
-
-            <div class="producto-info">
-              <h3>{{ producto.producto.nombre }}</h3>
-              <p v-if="producto.descripcion" class="descripcion-corta">
-                {{ producto.descripcion }}
-              </p>
-              <div class="producto-footer">
-                <span class="precio">Bs {{ formatearPrecio(producto.precio) }}</span>
-                <span v-if="producto.producto.categoria" class="categoria-badge">
-                  {{ producto.producto.categoria.nombre }}
-                </span>
-              </div>
-            </div>
-          </div>
+            :producto="producto"
+            />
         </div>
-      </main>
+        </main>
     </div>
   </div>
 </template>
@@ -200,6 +173,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { productosService } from '../services/productosService'
 import categoriasService from '../services/categoriasService'
 import { tallasService } from '../services/tallasService'
+import TarjetaProductoPublica from '../components/TarjetaProductoPublica.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -232,14 +206,16 @@ const cargarDatos = async () => {
     // Cargar categoría actual
     categoriaActual.value = await categoriasService.obtenerCategoriaPorId(categoriaId)
     
-    // Cargar subcategorías
+    // Cargar subcategorías con productos
     const subs = await categoriasService.obtenerSubcategorias(categoriaId)
     subcategorias.value = subs || []
+    
+    console.log('📂 Subcategorías cargadas:', subcategorias.value);
     
     // Cargar tallas
     tallas.value = await tallasService.obtenerTodas()
     
-    // Cargar productos de la categoría y sus subcategorías
+    // Cargar productos DESPUÉS de tener las subcategorías
     await cargarProductos()
     
     cargando.value = false
@@ -251,52 +227,53 @@ const cargarDatos = async () => {
 }
 
 const cargarProductos = async () => {
-  try {
-    const categoriasIds = [categoriaId, ...subcategorias.value.map(s => s.id)];
-
-    const promesas = categoriasIds.map(async (catId) => {
-      try {
-        return await productosService.obtenerPorCategoria(catId);
-      } catch (err) {
-        console.error("Error al cargar productos de categoría " + catId, err);
-        return [];
-      }
-    });
-
-    const resultados = await Promise.all(promesas);
-    productosOriginales.value = resultados.flat();
-  } catch (err) {
-    console.error("Error al cargar productos:", err);
-    throw err;
-  }
-};
-
+  productosOriginales.value = await productosService.obtenerPorCategoria(categoriaId)
+}
 
 const productosFiltrados = computed(() => {
   let productos = [...productosOriginales.value]
 
+  console.log('Productos antes de filtrar:', productos.length);
+  console.log('Filtros activos:', filtros.value);
+
   // Filtrar por subcategoría
   if (filtros.value.subcategoriaId) {
-    productos = productos.filter(p => 
-      p.producto?.categoria?.id === filtros.value.subcategoriaId
-    )
+    productos = productos.filter(p => {
+      const categoriaProducto = p.producto?.categoria?.id;
+      const coincide = categoriaProducto === filtros.value.subcategoriaId;
+      return coincide;
+    });
+    console.log('Después de filtrar por subcategoría:', productos.length);
   }
 
   // Filtrar por tallas
   if (filtros.value.tallasIds.length > 0) {
-    productos = productos.filter(p => 
-      p.talla && filtros.value.tallasIds.includes(p.talla.id)
-    )
+    productos = productos.filter(p => {
+      const tieneTalla = p.talla && filtros.value.tallasIds.includes(p.talla.id);
+      return tieneTalla;
+    });
+    console.log('Después de filtrar por tallas:', productos.length);
   }
 
   // Ordenar por precio
   if (filtros.value.ordenPrecio === 'asc') {
-    productos.sort((a, b) => a.precio - b.precio)
+    productos.sort((a, b) => {
+      const precioA = parseFloat(a.precio) || 0;
+      const precioB = parseFloat(b.precio) || 0;
+      return precioA - precioB;
+    });
+    console.log('Ordenado ascendente por precio');
   } else if (filtros.value.ordenPrecio === 'desc') {
-    productos.sort((a, b) => b.precio - a.precio)
+    productos.sort((a, b) => {
+      const precioA = parseFloat(a.precio) || 0;
+      const precioB = parseFloat(b.precio) || 0;
+      return precioB - precioA;
+    });
+    console.log('Ordenado descendente por precio');
   }
 
-  return productos
+  console.log('Productos finales:', productos.length);
+  return productos;
 })
 
 const hayFiltrosActivos = computed(() => {
@@ -319,6 +296,12 @@ const limpiarFiltros = () => {
 
 const limpiarFiltroTallas = () => {
   filtros.value.tallasIds = []
+}
+
+const contarProductosPorCategoria = (categoriaId) => {
+  return productosOriginales.value.filter(p => 
+    p.producto?.categoria?.id === categoriaId
+  ).length
 }
 
 const formatearPrecio = (precio) => {
@@ -393,6 +376,13 @@ const volver = () => {
   font-size: 1.1rem;
   font-weight: 600;
 }
+
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
 
 .mensaje-error {
   display: flex;
@@ -550,105 +540,6 @@ const volver = () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-}
-
-.producto-card {
-  background: white;
-  border: 2px solid var(--cafe-claro);
-  border-radius: 15px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.producto-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(111, 72, 39, 0.2);
-  border-color: var(--naranja-opaco);
-}
-
-.producto-imagen {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  background: linear-gradient(135deg, var(--cafe-claro), var(--naranja-opaco));
-}
-
-.producto-imagen img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.imagen-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 3rem;
-}
-
-.badge-talla {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(255, 255, 255, 0.95);
-  color: var(--cafe);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.producto-info {
-  padding: 15px;
-}
-
-.producto-info h3 {
-  color: var(--cafe);
-  margin: 0 0 8px 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.descripcion-corta {
-  color: var(--gris-claro);
-  font-size: 0.85rem;
-  margin: 0 0 12px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.producto-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.precio {
-  color: var(--cafe);
-  font-weight: 700;
-  font-size: 1.2rem;
-}
-
-.categoria-badge {
-  background-color: var(--crema);
-  color: var(--cafe);
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 @media (max-width: 1024px) {

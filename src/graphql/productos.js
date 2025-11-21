@@ -157,3 +157,33 @@ export const GET_PRODUCTOS_POR_CATEGORIA = gql`
     }
   }
 `;
+
+export const PRODUCTOS_POR_CATEGORIA = gql`
+  query ProductosPorCategoria($categoriaId: ID!) {
+    productosPorCategoria(categoriaId: $categoriaId) {
+      id
+      precio
+      stock
+      descripcion
+      talla {
+        id
+        nombre
+      }
+      imagenes {
+        archivo
+      }
+      producto {
+        id
+        nombre
+        categoria {
+          id
+          nombre
+        }
+      }
+      tienda {
+        id
+        nombre
+      }
+    }
+  }
+`

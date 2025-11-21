@@ -89,73 +89,77 @@
         <h2><i class="pi pi-wallet"></i> Información de Pago</h2>
 
         <!-- TIENE QR -->
-      <div v-if="producto.tienda.codigoQr" class="contenido-con-qr">
+        <div v-if="producto.tienda.codigoQr" class="contenido-con-qr">
 
-        <!-- Texto arriba del QR -->
-        <p class="qr-instrucciones qr-arriba">
-          <i class="pi pi-info-circle"></i>
-          Escanea este código QR para realizar el pago
-        </p>
+          <!-- Texto arriba del QR -->
+          <p class="qr-instrucciones qr-arriba">
+            <i class="pi pi-info-circle"></i>
+            Escanea este código QR para realizar el pago
+          </p>
 
-        <!-- QR centrado -->
-        <div class="qr-center">
-          <img :src="producto.tienda.codigoQr" alt="Código QR" class="qr-img" />
-        </div>
-
-        <!-- Resumen centrado -->
-        <div class="resumen-compra resumen-centered">
-          <div class="resumen-line">
-            <span>Subtotal:</span>
-            <strong>Bs {{ calcularSubtotal() }}</strong>
-          </div>
-          <div class="resumen-line total">
-            <span>Total a Pagar:</span>
-            <strong>Bs {{ calcularSubtotal() }}</strong>
-          </div>
-        </div>
-        <!-- Formulario comprobante -->
-        <div class="comprobante-section">
-          <h3>Subir Comprobante de Pago</h3>
-
-          <div class="campo">
-            <label for="comprobante"></label>
-            <input 
-              id="comprobante"
-              type="file"
-              accept="image/*"
-              @change="handleComprobante"
-              required
-              class="input-file"
-            />
+          <!-- QR centrado -->
+          <div class="qr-center">
+            <img :src="producto.tienda.codigoQr" alt="Código QR" class="qr-img" />
           </div>
 
-          <div v-if="comprobantePreview" class="comprobante-preview">
-            <img :src="comprobantePreview" alt="Preview comprobante" class="comprobante-preview-img"/>
-            <button 
-              type="button"
-              @click="eliminarComprobante"
-              class="btn-eliminar-preview"
-            >
-              <i class="pi pi-times"></i>
-            </button>
+          <!-- Resumen centrado -->
+          <div class="resumen-compra resumen-centered">
+            <div class="resumen-line">
+              <span>Subtotal:</span>
+              <strong>Bs {{ calcularSubtotal() }}</strong>
+            </div>
+            <div class="resumen-line total">
+              <span>Total a Pagar:</span>
+              <strong>Bs {{ calcularSubtotal() }}</strong>
+            </div>
           </div>
-          <!-- Botón centrado -->
-                   <p class="nota-info">
-          <i class="pi pi-info-circle"></i>
-          Al confirmar, el vendedor recibirá una notificación.
-        </p>
-        <div class="btn-center">
-          <button 
-            class="btn-confirmar-pago"
-            @click="confirmarPagoQR"
-          >
-            <i class="pi pi-check-circle"></i>
-            <span> Confirmar Pago Realizado</span>
-          </button>
-        </div>
+
+          <!-- Formulario comprobante -->
+          <div class="comprobante-section">
+            <h3>Subir Comprobante de Pago</h3>
+
+            <div class="campo">
+              <label for="comprobante">Selecciona la imagen del comprobante *</label>
+              <input 
+                id="comprobante"
+                type="file"
+                accept="image/*"
+                @change="handleComprobante"
+                class="input-file"
+              />
+            </div>
+
+            <div v-if="comprobantePreview" class="comprobante-preview">
+              <img :src="comprobantePreview" alt="Preview comprobante" class="comprobante-preview-img"/>
+              <button 
+                type="button"
+                @click="eliminarComprobante"
+                class="btn-eliminar-preview"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+
+            <p class="nota-info">
+              <i class="pi pi-info-circle"></i>
+              Al confirmar, el vendedor recibirá una notificación para verificar tu pago.
+            </p>
+
+            <!-- Botón centrado -->
+            <div class="btn-center">
+              <button 
+                class="btn-confirmar-pago"
+                @click="confirmarPagoQR"
+                :disabled="!comprobanteArchivo || loadingCompra"
+              >
+                <i :class="loadingCompra ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>
+                <span>{{ loadingCompra ? 'Procesando...' : 'Confirmar Pago Realizado' }}</span>
+              </button>
+            </div>
+          </div>
+
         </div>
 
-      </div>
         <!-- NO TIENE QR -->
         <div v-else class="no-qr-box">
           <div class="alerta-sin-qr">
@@ -217,14 +221,6 @@ const loading = ref(false)
 const loadingCompra = ref(false)
 const error = ref('')
 const success = ref('')
-const confirmarPagoQR = () => {
-  console.log("Enviando notificación al vendedor... (pendiente de implementar)");
-  
-  // Aquí después implementaremos:
-  // - notificación al vendedor
-  // - registro del intento de pago
-  // - cambio de estado del pedido si quieres
-}
 
 const formulario = ref({
   cantidad: 1
@@ -253,7 +249,6 @@ const { mutate: crearVenta } = useMutation(CREAR_VENTA)
 
 onMounted(async () => {
   await cargarDatos()
-  console.log("TIENDA:", producto.value?.tienda)
 })
 
 const cargarDatos = async () => {
@@ -317,14 +312,10 @@ const getWhatsAppLink = () => {
   return `https://wa.me/${numeroLimpio}?text=${mensaje}`
 }
 
-const confirmarCompra = async () => {
+// ✅ FUNCIÓN PRINCIPAL: Confirmar pago con QR
+const confirmarPagoQR = async () => {
   if (!comprobanteArchivo.value) {
     error.value = 'Debes subir un comprobante de pago'
-    return
-  }
-
-  if (formulario.value.cantidad > producto.value.stock) {
-    error.value = 'No hay suficiente stock disponible'
     return
   }
 
@@ -342,11 +333,12 @@ const confirmarCompra = async () => {
     })
 
     if (result?.data?.crearVenta) {
-      success.value = result.data.crearVenta.mensaje
+      success.value = result.data.crearVenta.mensaje || '¡Compra registrada! El vendedor verificará tu pago.'
       
+      // Redirigir a notificaciones después de 2 segundos
       setTimeout(() => {
         router.push('/notificaciones')
-      }, 2000)
+      }, 2500)
     }
   } catch (err) {
     error.value = err.message || 'Error al procesar la compra'
@@ -459,7 +451,7 @@ const confirmarCompra = async () => {
   gap: 30px;
 }
 
-.producto-imagen {
+.producto-imagen-container {
   width: 100%;
   height: 250px;
   border-radius: 15px;
@@ -468,7 +460,7 @@ const confirmarCompra = async () => {
   background: linear-gradient(135deg, var(--cafe-claro), var(--naranja-opaco));
 }
 
-.producto-imagen img {
+.producto-imagen {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -496,7 +488,7 @@ const confirmarCompra = async () => {
   line-height: 1.5;
 }
 
-.detalles {
+.producto-detalles-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -554,51 +546,69 @@ const confirmarCompra = async () => {
 
 /* Contenido con QR */
 .contenido-con-qr {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 30px;
-}
-
-.qr-section {
   display: flex;
   flex-direction: column;
-}
-
-.qr-container {
-  background: var(--crema);
-  padding: 20px;
-  border-radius: 15px;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  gap: 20px;
 }
 
-.qr-image {
-  width: 100%;
-  max-width: 250px;
-  height: auto;
-  border-radius: 10px;
-  border: 3px solid var(--cafe);
-  margin-bottom: 15px;
-}
-
-.qr-instrucciones {
+.qr-arriba {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--gris-oscuro);
-  font-size: 0.9rem;
-  text-align: left;
-  margin: 0;
-  padding: 10px;
-  background: white;
-  border-radius: 8px;
 }
 
-.qr-instrucciones i {
+.qr-arriba i {
   color: var(--naranja-opaco);
+}
+
+.qr-center {
+  display: flex;
+  justify-content: center;
+}
+
+.qr-img {
+  max-width: 280px;
+  border-radius: 15px;
+  border: 3px solid var(--cafe);
+}
+
+.resumen-centered {
+  width: 100%;
+  max-width: 350px;
+  background: var(--crema);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.resumen-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  color: var(--gris-oscuro);
+}
+
+.resumen-line.total {
+  border-top: 2px solid var(--cafe-claro);
+  margin-top: 10px;
+  padding-top: 15px;
   font-size: 1.2rem;
+  color: var(--cafe);
 }
 
 /* Comprobante Section */
+.comprobante-section {
+  width: 100%;
+  max-width: 500px;
+}
+
 .comprobante-section h3 {
   color: var(--cafe);
   margin: 0 0 20px 0;
@@ -606,6 +616,7 @@ const confirmarCompra = async () => {
 
 .campo {
   margin-bottom: 20px;
+  text-align: left;
 }
 
 .campo label {
@@ -615,34 +626,13 @@ const confirmarCompra = async () => {
   margin-bottom: 8px;
 }
 
-.input {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid var(--cafe-claro);
-  border-radius: 10px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--naranja-opaco);
-  box-shadow: 0 0 0 3px rgba(178, 113, 57, 0.1);
-}
-
 .input-file {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: 2px dashed var(--cafe-claro);
   border-radius: 10px;
   cursor: pointer;
-}
-
-small {
-  display: block;
-  color: var(--gris-claro);
-  font-size: 0.85rem;
-  margin-top: 5px;
+  background: white;
 }
 
 .comprobante-preview {
@@ -653,7 +643,7 @@ small {
   border: 2px solid var(--cafe-claro);
 }
 
-.comprobante-preview img {
+.comprobante-preview-img {
   width: 100%;
   max-height: 300px;
   object-fit: contain;
@@ -681,74 +671,58 @@ small {
   transform: scale(1.1);
 }
 
-/* Resumen */
-.resumen-compra {
-  background: var(--crema);
-  padding: 20px;
-  border-radius: 10px;
-  margin: 20px 0;
-}
-
-.resumen-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  color: var(--gris-oscuro);
-}
-
-.resumen-item.total {
-  border-top: 2px solid var(--cafe-claro);
-  margin-top: 10px;
-  padding-top: 15px;
-  font-size: 1.2rem;
-  color: var(--cafe);
-}
-
-.btn-confirmar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 15px 30px;
-  background: linear-gradient(135deg, var(--cafe), var(--naranja-opaco));
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-confirmar:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(111, 72, 39, 0.4);
-}
-
-.btn-confirmar:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .nota-info {
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--gris-claro);
   font-size: 0.9rem;
-  margin-top: 15px;
+  margin: 15px 0;
   padding: 10px;
   background: #f5f5f5;
   border-radius: 8px;
+  text-align: left;
 }
 
 .nota-info i {
   color: var(--naranja-opaco);
+  flex-shrink: 0;
 }
 
-/* Contenido sin QR */
-.contenido-sin-qr {
+.btn-center {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.btn-confirmar-pago {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--cafe), var(--naranja-opaco));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-confirmar-pago:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(111, 72, 39, 0.4);
+}
+
+.btn-confirmar-pago:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Sin QR */
+.no-qr-box {
   display: flex;
   flex-direction: column;
   gap: 25px;
@@ -761,35 +735,22 @@ small {
   background: linear-gradient(135deg, #fff9e6, #ffe6cc);
   border: 2px solid var(--naranja-opaco);
   border-radius: 15px;
-  align-items: start;
+  align-items: center;
 }
 
 .icono-alerta {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.icono-alerta i {
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: var(--naranja-opaco);
 }
 
-.contenido-alerta h3 {
+.alerta-sin-qr h3 {
   color: var(--cafe);
-  margin: 0 0 10px 0;
-  font-size: 1.3rem;
+  margin: 0 0 5px 0;
 }
 
-.contenido-alerta p {
+.alerta-sin-qr p {
   color: var(--gris-oscuro);
   margin: 0;
-  line-height: 1.6;
 }
 
 .btn-whatsapp {
@@ -846,22 +807,12 @@ small {
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .contenido-con-qr {
-    grid-template-columns: 1fr;
-  }
-
-  .qr-section {
-    order: -1;
-  }
-}
-
 @media (max-width: 768px) {
   .producto-info {
     grid-template-columns: 1fr;
   }
 
-  .producto-imagen {
+  .producto-imagen-container {
     height: 200px;
   }
 
@@ -874,73 +825,9 @@ small {
     width: 100%;
     justify-content: center;
   }
-}
-/* =============================
-   FIX COMPLETO PARA CENTRAR TODO
-   ============================= */
-.contenido-con-qr {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  gap: 20px !important;
-}
 
-/* Quitar ese fondo feo del bloque QR original */
-.qr-section, 
-.qr-container {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
+  .qr-img {
+    max-width: 220px;
+  }
 }
-
-/* Texto arriba del QR */
-.qr-arriba {
-  text-align: center;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 5px;
-}
-
-/* QR centrado */
-.qr-img {
-  display: block;
-  margin: 0 auto;
-}
-
-/* Centrar resumen */
-.resumen-centered {
-  width: 100%;
-  max-width: 300px;
-  background: var(--crema);
-  padding: 20px;
-  border-radius: 10px;
-}
-
-/* Centrar el botón */
-.btn-center {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-/* Mejor apariencia del botón */
-.btn-confirmar-pago {
-  padding: 14px 28px;
-  background: linear-gradient(135deg, var(--cafe), var(--naranja-opaco));
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.btn-confirmar-pago:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(111, 72, 39, 0.4);
-}
-
 </style>

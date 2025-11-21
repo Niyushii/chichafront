@@ -23,7 +23,32 @@
         <!-- Perfil y Accesos -->
         <div class="user-section">
           <template v-if="isAuthenticated">
-            <div class="user-info">
+            <!-- Accesos Rápidos -->
+            <div class="quick-actions">
+              <!-- Favoritos -->
+              <router-link to="/favoritos" class="action-btn" title="Mis Favoritos">
+                <i class="pi pi-heart"></i>
+                <span class="action-label">Favoritos</span>
+              </router-link>
+
+              <!-- Mis Tiendas -->
+              <router-link to="/tiendas" class="action-btn" title="Mis Tiendas">
+                <i class="pi pi-shop"></i>
+                <span class="action-label">Tiendas</span>
+              </router-link>
+
+              <!-- Notificaciones -->
+              <router-link to="/notificaciones" class="action-btn notif-btn" title="Notificaciones">
+                <i class="pi pi-bell"></i>
+                <span v-if="notificacionesNoLeidas > 0" class="badge-notificaciones">
+                  {{ notificacionesNoLeidas }}
+                </span>
+                <span class="action-label">Notificaciones</span>
+              </router-link>
+            </div>
+
+            <!-- Perfil del Usuario -->
+            <router-link to="/perfil" class="user-info">
               <img 
                 :src="userPhoto" 
                 alt="Perfil"
@@ -33,23 +58,8 @@
                 <span class="greeting">Hola,</span>
                 <span class="username">{{ userName }}</span>
               </div>
-            </div>
-
-            <!-- Menú desplegable -->
-            <div class="user-menu">
-              <router-link to="/tiendas" class="menu-item">
-                <i class="pi pi-shop"></i>
-                <span>Mis Tiendas</span>
-              </router-link>
-              <router-link to="/favoritos" class="menu-item">
-                <i class="pi pi-heart"></i>
-                <span>Favoritos</span>
-              </router-link>
-              <router-link to="/perfil" class="menu-item">
-                <i class="pi pi-user"></i>
-                <span>Mi Perfil</span>
-              </router-link>
-            </div>
+              <i class="pi pi-angle-down arrow-icon"></i>
+            </router-link>
           </template>
 
           <template v-else>
@@ -95,10 +105,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '../services/authService'
 import categoriasService from '../services/categoriasService'
+import { gql } from '@apollo/client/core'
+import { useQuery } from '@vue/apollo-composable'
 
 const router = useRouter()
 
@@ -111,9 +123,32 @@ const userData = computed(() => authService.getUserData())
 const isAuthenticated = computed(() => authService.isAuthenticated())
 const userName = computed(() => userData.value ? userData.value.nombre : '')
 const userPhoto = computed(() => {
-  // Ruta a la imagen por defecto
   return userData.value?.fotoPerfil || '/src/assets/img/fotoPerfil.png'
 })
+
+const notificacionesNoLeidas = ref(0)
+
+// Query para notificaciones no leídas
+const CONTAR_NO_LEIDAS = gql`
+  query ContarNoLeidas {
+    misNotificaciones(soloNoLeidas: true) {
+      id
+    }
+  }
+`
+
+// Solo ejecutar si está autenticado
+if (isAuthenticated.value) {
+  const { result } = useQuery(CONTAR_NO_LEIDAS, {}, {
+    pollInterval: 30000 // Actualizar cada 30 segundos
+  })
+
+  watch(result, (newResult) => {
+    if (newResult?.misNotificaciones) {
+      notificacionesNoLeidas.value = newResult.misNotificaciones.length
+    }
+  })
+}
 
 // Cargar categorías principales
 onMounted(async () => {
@@ -207,27 +242,96 @@ const realizarBusqueda = () => {
 .user-section {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
+  margin-left: auto;
+}
+
+/* Acciones Rápidas */
+.quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.action-btn i {
+  font-size: 1.4rem;
+}
+
+.action-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Botón de Notificaciones Especial */
+.notif-btn {
   position: relative;
 }
 
+.badge-notificaciones {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: #ff4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Perfil del Usuario */
 .user-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 15px;
+  padding: 8px 16px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 25px;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-decoration: none;
+  border: 2px solid transparent;
 }
 
 .user-info:hover {
   background: rgba(255, 255, 255, 0.3);
-}
-
-.user-info:hover + .user-menu {
-  display: flex;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .user-photo {
@@ -236,6 +340,7 @@ const realizarBusqueda = () => {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .user-details {
@@ -254,42 +359,15 @@ const realizarBusqueda = () => {
   font-size: 1rem;
 }
 
-/* Menú desplegable */
-.user-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 10px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  flex-direction: column;
-  min-width: 200px;
-  overflow: hidden;
+.arrow-icon {
+  color: white;
+  font-size: 1rem;
+  margin-left: 4px;
+  transition: transform 0.3s ease;
 }
 
-.user-menu:hover {
-  display: flex;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 15px 20px;
-  color: var(--cafe);
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.menu-item:hover {
-  background: var(--crema);
-}
-
-.menu-item i {
-  font-size: 1.2rem;
-  color: var(--naranja-opaco);
+.user-info:hover .arrow-icon {
+  transform: translateY(2px);
 }
 
 /* Botón de login */
@@ -390,6 +468,15 @@ const realizarBusqueda = () => {
     max-width: 100%;
     margin-top: 15px;
   }
+
+  .action-label {
+    display: none;
+  }
+
+  .action-btn {
+    min-width: 50px;
+    padding: 10px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -403,6 +490,23 @@ const realizarBusqueda = () => {
 
   .user-details {
     display: none;
+  }
+
+  .arrow-icon {
+    display: none;
+  }
+
+  .quick-actions {
+    gap: 5px;
+  }
+
+  .action-btn {
+    padding: 8px;
+    min-width: 45px;
+  }
+
+  .action-btn i {
+    font-size: 1.2rem;
   }
 
   .categories-section {
